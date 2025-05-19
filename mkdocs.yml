@@ -1,0 +1,6 @@
+site_name: Discord Bot Docs (internal)
+docs_dir: docs
+
+nav:
+  - Read Me: Discord-Bot README.md
+  - Changelog: Discord-Bot-CHANGELOG.md

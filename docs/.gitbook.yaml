@@ -1,0 +1,10 @@
+# GitBook configuration for Bodega Discord Bot
+root: ./README.md
+summary: ./SUMMARY.md
+
+# Optional: Add metadata, plugins, or customizations below as needed
+# For example:
+# title: Bodega Discord Bot Documentation
+# plugins:
+#   - search
+#   - highlight

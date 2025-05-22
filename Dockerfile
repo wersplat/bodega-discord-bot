@@ -7,4 +7,6 @@ RUN npm ci
 
 COPY . .
 
-CMD ["npx", "ts-node-dev", "main.ts"]
+RUN npm run build
+
+CMD ["node", "dist/main.js"]

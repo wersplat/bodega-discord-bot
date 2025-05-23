@@ -1,5 +1,22 @@
 import { SlashCommandBuilder, PermissionFlagsBits, ChatInputCommandInteraction, GuildTextBasedChannel } from 'discord.js';
 
+export const data = new SlashCommandBuilder()
+  .setName('say')
+  .setDescription('Send a custom message to a channel')
+  .addChannelOption(opt =>
+    opt
+      .setName('channel')
+      .setDescription('Where to send the message')
+      .setRequired(true)
+  )
+  .addStringOption(opt =>
+    opt
+      .setName('message')
+      .setDescription('Content to send')
+      .setRequired(true)
+  )
+  .setDefaultMemberPermissions(PermissionFlagsBits.Administrator);
+
 export async function execute(interaction: ChatInputCommandInteraction): Promise<void> {
   const channel = interaction.options.getChannel('channel') as GuildTextBasedChannel | null;
   const content = interaction.options.getString('message') ?? '';

@@ -9,6 +9,16 @@ import {
   GuildTextBasedChannel
 } from 'discord.js';
 
+export const data = new SlashCommandBuilder()
+  .setName('saymodal')
+  .setDescription('Send a custom message via a form')
+  .addChannelOption(opt =>
+    opt.setName('channel')
+      .setDescription('Where to send the message')
+      .setRequired(true)
+  )
+  .setDefaultMemberPermissions(PermissionFlagsBits.Administrator);
+
 export async function execute(interaction: ChatInputCommandInteraction): Promise<void> {
   const channel = interaction.options.getChannel('channel') as GuildTextBasedChannel | null;
   if (!channel) {

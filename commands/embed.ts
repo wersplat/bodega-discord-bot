@@ -1,4 +1,33 @@
-import { SlashCommandBuilder, PermissionFlagsBits, EmbedBuilder, ChatInputCommandInteraction, TextChannel, GuildTextBasedChannel } from 'discord.js';
+import { SlashCommandBuilder, PermissionFlagsBits, EmbedBuilder, ChatInputCommandInteraction, GuildTextBasedChannel } from 'discord.js';
+
+export const data = new SlashCommandBuilder()
+  .setName('embed')
+  .setDescription('Send a custom embed to a channel')
+  .addChannelOption(opt =>
+    opt
+      .setName('channel')
+      .setDescription('Where to send the embed')
+      .setRequired(true)
+  )
+  .addStringOption(opt =>
+    opt
+      .setName('title')
+      .setDescription('Embed title')
+      .setRequired(true)
+  )
+  .addStringOption(opt =>
+    opt
+      .setName('description')
+      .setDescription('Embed description')
+      .setRequired(true)
+  )
+  .addStringOption(opt =>
+    opt
+      .setName('color')
+      .setDescription('Embed color (hex without #, e.g. FF0000)')
+      .setRequired(false)
+  )
+  .setDefaultMemberPermissions(PermissionFlagsBits.Administrator);
 
 export async function execute(interaction: ChatInputCommandInteraction): Promise<void> {
   const channel = interaction.options.getChannel('channel') as GuildTextBasedChannel | null;

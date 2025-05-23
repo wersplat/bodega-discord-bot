@@ -9,6 +9,16 @@ import {
   GuildTextBasedChannel
 } from 'discord.js';
 
+export const data = new SlashCommandBuilder()
+  .setName('embedmodal')
+  .setDescription('Create an embed via a form')
+  .addChannelOption(opt =>
+    opt.setName('channel')
+      .setDescription('Where to send the embed')
+      .setRequired(true)
+  )
+  .setDefaultMemberPermissions(PermissionFlagsBits.Administrator);
+
 export async function execute(interaction: ChatInputCommandInteraction): Promise<void> {
   const channel = interaction.options.getChannel('channel') as GuildTextBasedChannel | null;
   if (!channel) {

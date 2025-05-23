@@ -1,6 +1,6 @@
 import { SlashCommandBuilder, PermissionFlagsBits, EmbedBuilder, ChatInputCommandInteraction, GuildTextBasedChannel } from 'discord.js';
 
-export const data = new SlashCommandBuilder()
+const data = new SlashCommandBuilder()
   .setName('embed')
   .setDescription('Send a custom embed to a channel')
   .addChannelOption(opt =>
@@ -29,7 +29,7 @@ export const data = new SlashCommandBuilder()
   )
   .setDefaultMemberPermissions(PermissionFlagsBits.Administrator);
 
-export async function execute(interaction: ChatInputCommandInteraction): Promise<void> {
+async function execute(interaction: ChatInputCommandInteraction): Promise<void> {
   const channel = interaction.options.getChannel('channel') as GuildTextBasedChannel | null;
   const title = interaction.options.getString('title') ?? '';
   const description = interaction.options.getString('description') ?? '';
@@ -49,4 +49,6 @@ export async function execute(interaction: ChatInputCommandInteraction): Promise
   await channel.send({ embeds: [embed] });
   await interaction.reply({ content: '📬 Embed sent!', ephemeral: true });
 }
+
+export default { data, execute };
 

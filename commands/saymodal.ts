@@ -9,7 +9,7 @@ import {
   GuildTextBasedChannel
 } from 'discord.js';
 
-export const data = new SlashCommandBuilder()
+const data = new SlashCommandBuilder()
   .setName('saymodal')
   .setDescription('Send a custom message via a form')
   .addChannelOption(opt =>
@@ -19,7 +19,7 @@ export const data = new SlashCommandBuilder()
   )
   .setDefaultMemberPermissions(PermissionFlagsBits.Administrator);
 
-export async function execute(interaction: ChatInputCommandInteraction): Promise<void> {
+async function execute(interaction: ChatInputCommandInteraction): Promise<void> {
   const channel = interaction.options.getChannel('channel') as GuildTextBasedChannel | null;
   if (!channel) {
     await interaction.reply({ content: '🚫 That\'s not a text channel!', ephemeral: true });
@@ -40,4 +40,6 @@ export async function execute(interaction: ChatInputCommandInteraction): Promise
 
   await interaction.showModal(modal);
 }
+
+export default { data, execute };
 

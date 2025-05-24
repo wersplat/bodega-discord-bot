@@ -1,12 +1,13 @@
-import { DiscordSDK } from "@discord/embedded-app-sdk";
+// Import the Discord SDK
+// Note: We're using a script tag in index.html to load the SDK globally
+// This avoids module import issues in the browser
+declare const DiscordSDK: any;
 
 // Extend the Window interface to include ENV
-declare global {
-  interface Window {
-    ENV: {
-      CLIENT_ID: string;
-    };
-  }
+interface Window {
+  ENV: {
+    CLIENT_ID: string;
+  };
 }
 
 // Define types for our data

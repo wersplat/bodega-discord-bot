@@ -5,10 +5,12 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Discord Activity - Google Sheet</title>
   <link rel="stylesheet" href="styles.css">
+  <!-- Load the Discord SDK directly -->
+  <script src="https://unpkg.com/@discord/embedded-app-sdk@1.0.0/dist/discord-embedded-app-sdk.js"></script>
   <script>
     // Set the Discord Client ID for the SDK
     window.ENV = {
-      CLIENT_ID: process.env.CLIENT_ID || '1234567890123456789' // Will be replaced during build
+      CLIENT_ID: '__DISCORD_CLIENT_ID__' // Will be replaced by the server with environment variable
     };
   </script>
 </head>

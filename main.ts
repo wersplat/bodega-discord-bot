@@ -6,7 +6,8 @@ import { NodeOptions } from "@sentry/node";
 import { RewriteFrames } from "@sentry/integrations";
 import { Client, GatewayIntentBits, Collection, Interaction } from 'discord.js';
 import { createLogger, transports, format } from 'winston';
-import { readdirSync } from 'fs';
+import { readdirSync, readFileSync } from 'fs';
+import * as fs from 'fs';
 import { join } from 'path';
 import { registerCommands } from './utils/registerCommands';
 import { startScheduler } from './utils/scheduler';
@@ -17,6 +18,23 @@ import path from 'path';
 // --- Express Web Server for Activity Webview ---
 const app = express();
 const activityPath = path.join(__dirname, 'activity');
+
+// Middleware to inject environment variables into HTML
+app.use('/activity', (req, res, next) => {
+  if (req.path === '/index.html' || req.path === '/') {
+    const indexPath = path.join(activityPath, 'index.html');
+    let html = fs.readFileSync(indexPath, 'utf8');
+    
+    // Replace the placeholder with actual environment variable
+    html = html.replace('__DISCORD_CLIENT_ID__', process.env.DISCORD_CLIENT_ID || '');
+    
+    res.send(html);
+  } else {
+    next();
+  }
+});
+
+// Serve static files
 app.use('/activity', express.static(activityPath));
 
 // Enable CORS for all routes

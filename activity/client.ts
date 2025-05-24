@@ -4,7 +4,7 @@
 // Extend the Window interface to include ENV
 interface Window {
   ENV: {
-    CLIENT_ID: string;
+    DISCORD_CLIENT_ID: string;
   };
 }
 
@@ -30,7 +30,7 @@ const GOOGLE_SHEETS_URL = process.env.GOOGLE_SHEETS_CSV_URL;
 
 // Initialize the Discord SDK
 // Using window.DiscordSDK which is provided by Discord's script
-const discordSdk = new (window as any).DiscordSDK(window.ENV.CLIENT_ID);
+const discordSdk = new (window as any).DiscordSDK(window.ENV.DISCORD_CLIENT_ID);
 
 // Fetch data from our backend API
 async function fetchData(): Promise<void> {

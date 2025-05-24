@@ -4,6 +4,11 @@ import { DiscordSDK } from "@discord/embedded-app-sdk";
 // To get this URL: File > Share > Publish to web > Select CSV format > Publish
 const GOOGLE_SHEETS_CSV_URL = 'YOUR_GOOGLE_SHEETS_CSV_PUBLISHED_URL';
 
+// Define types for our data
+interface DataRow {
+  [key: string]: string;
+}
+
 // Discord SDK setup
 const discordSdk = new (window as any).DiscordSDK(process.env.CLIENT_ID!);
 
@@ -15,15 +20,15 @@ const tableHeaders = document.getElementById('table-headers') as HTMLElement;
 const tableBody = document.getElementById('table-body') as HTMLElement;
 
 // Parse CSV string to array of objects
-function parseCSV(csvText: string): any[] {
+function parseCSV(csvText: string): DataRow[] {
   const lines = csvText.split('\n').filter(line => line.trim() !== '');
   if (lines.length === 0) return [];
   
   const headers = lines[0].split(',').map(header => header.trim());
-  const result = [];
+  const result: DataRow[] = [];
   
   for (let i = 1; i < lines.length; i++) {
-    const values = [];
+    const values: string[] = [];
     let currentValue = '';
     let inQuotes = false;
     
@@ -44,7 +49,7 @@ function parseCSV(csvText: string): any[] {
     values.push(currentValue);
     
     // Create an object with headers as keys
-    const row: any = {};
+    const row: DataRow = {};
     headers.forEach((header, index) => {
       row[header] = values[index] || '';
     });
@@ -56,7 +61,7 @@ function parseCSV(csvText: string): any[] {
 }
 
 // Fetch data from Google Sheets
-async function fetchData() {
+async function fetchData(): Promise<void> {
   try {
     loadingElement.style.display = 'block';
     errorElement.style.display = 'none';
@@ -80,7 +85,8 @@ async function fetchData() {
     setTimeout(fetchData, 30000);
   } catch (error) {
     console.error('Error fetching data:', error);
-    showError(`Error loading data: ${error.message}`);
+    const errorMessage = error instanceof Error ? error.message : 'An unknown error occurred';
+    showError(`Error loading data: ${errorMessage}`);
     // Retry after 10 seconds on error
     setTimeout(fetchData, 10000);
   } finally {
@@ -89,7 +95,7 @@ async function fetchData() {
 }
 
 // Render data in the table
-function renderTable(data: any[]) {
+function renderTable(data: DataRow[]): void {
   // Clear previous data
   tableHeaders.innerHTML = '';
   tableBody.innerHTML = '';
@@ -106,7 +112,7 @@ function renderTable(data: any[]) {
     // Set rows
     data.forEach(row => {
       const tr = document.createElement('tr');
-      Object.values(row).forEach((value: any) => {
+      Object.values(row).forEach(value => {
         const td = document.createElement('td');
         td.textContent = value;
         tr.appendChild(td);
@@ -119,13 +125,13 @@ function renderTable(data: any[]) {
 }
 
 // Show error message
-function showError(message: string) {
+function showError(message: string): void {
   errorElement.textContent = message;
   errorElement.style.display = 'block';
 }
 
 // Initialize the app
-async function init() {
+async function init(): Promise<void> {
   try {
     await discordSdk.ready();
     console.log('Discord SDK is ready');
@@ -135,7 +141,8 @@ async function init() {
     
   } catch (error) {
     console.error('Error initializing Discord SDK:', error);
-    showError('Failed to initialize Discord. Please try refreshing the page.');
+    const errorMessage = error instanceof Error ? error.message : 'Failed to initialize Discord';
+    showError(`${errorMessage}. Please try refreshing the page.`);
     loadingElement.style.display = 'none';
   }
 }

@@ -16,7 +16,7 @@ import path from 'path';
 
 // --- Express Web Server for Activity Webview ---
 const app = express();
-const activityPath = path.join(__dirname, '../activity');
+const activityPath = path.join(__dirname, 'activity');
 app.use('/activity', express.static(activityPath));
 
 const PORT = process.env.PORT || 3000;

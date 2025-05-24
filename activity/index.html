@@ -5,8 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Discord Activity - Google Sheet</title>
   <link rel="stylesheet" href="styles.css">
-  <!-- Load the Discord SDK directly -->
-  <script src="https://unpkg.com/@discord/embedded-app-sdk@1.0.0/dist/discord-embedded-app-sdk.js"></script>
+  <!-- Discord SDK will be loaded from Discord's own CDN -->
   <script>
     // Set the Discord Client ID for the SDK
     window.ENV = {
@@ -37,6 +36,8 @@
     </div>
   </div>
   
+  <!-- Load Discord's SDK from their own domain (automatically injected in Activities) -->
+  <script src="https://discord.com/assets/16c8bd5bd52.js"></script>
   <script type="module" src="client.js"></script>
 </body>
 </html>

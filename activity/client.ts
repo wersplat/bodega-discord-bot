@@ -1,7 +1,5 @@
-// Import the Discord SDK
-// Note: We're using a script tag in index.html to load the SDK globally
-// This avoids module import issues in the browser
-declare const DiscordSDK: any;
+// Discord SDK is loaded from Discord's own CDN
+// via the script tag in index.html (https://discord.com/assets/16c8bd5bd52.js)
 
 // Extend the Window interface to include ENV
 interface Window {
@@ -31,7 +29,8 @@ const API_ENDPOINT = '/api/sheet-data';
 const GOOGLE_SHEETS_URL = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vRV_Tz8yKtGZne961tId4A2Cdit7ZYGMJ8sinYHo_nX1SKj_VqAIi2haBbSd-UsUpVmkTFD-RDGezIt/pubhtml?widget=true&headers=false';
 
 // Initialize the Discord SDK
-const discordSdk = new DiscordSDK(window.ENV.CLIENT_ID);
+// Using window.DiscordSDK which is provided by Discord's script
+const discordSdk = new (window as any).DiscordSDK(window.ENV.CLIENT_ID);
 
 // Fetch data from our backend API
 async function fetchData(): Promise<void> {

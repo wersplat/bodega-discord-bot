@@ -31,7 +31,16 @@ const GOOGLE_SHEETS_URL = window.ENV.GOOGLE_SHEETS_CSV_URL;
 
 // Initialize the Discord SDK
 // Using window.DiscordSDK which is provided by Discord's script
-const discordSdk = new (window as any).DiscordSDK(window.ENV.DISCORD_CLIENT_ID);
+/ Defensive initialization for Discord SDK from CDN
+const DiscordSdkCtor = (window as any).DiscordSDK || (window as any).DiscordSdk;
+let discordSdk: any = null;
+
+if (DiscordSdkCtor) {
+  discordSdk = new DiscordSdkCtor(window.ENV.DISCORD_CLIENT_ID);
+} else {
+  console.error('DiscordSDK not loaded or not a constructor!');
+  console.log('DiscordSDK global:', (window as any).DiscordSDK, (window as any).DiscordSdk);
+}
 
 // Fetch data from our backend API
 async function fetchData(): Promise<void> {

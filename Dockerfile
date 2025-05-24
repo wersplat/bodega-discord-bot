@@ -18,7 +18,7 @@ RUN wget -q -t3 'https://packages.doppler.com/public/cli/rsa.8004D9FF50437357.ke
 EXPOSE 3000
 
 # Healthcheck for Railway, Docker Compose, etc.
-#HEALTHCHECK CMD wget --no-verbose --tries=1 --spider http://localhost:3000 || exit 1
+HEALTHCHECK CMD wget --no-verbose --tries=1 --spider http://localhost:3000 || exit 1
 
 RUN npm run build
 

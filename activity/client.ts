@@ -1,12 +1,11 @@
-// Discord SDK is loaded from Discord's own CDN
-// via the script tag in index.html (https://discord.com/assets/16c8bd5bd52.js)
-
-// Extend the Window interface to include ENV
-interface Window {
-  ENV: {
-    DISCORD_CLIENT_ID: string;
-    GOOGLE_SHEETS_CSV_URL: string;
-  };
+// Extend the Window interface to include ENV for TypeScript
+declare global {
+  interface Window {
+    ENV: {
+      DISCORD_CLIENT_ID: string;
+      GOOGLE_SHEETS_CSV_URL: string;
+    };
+  }
 }
 
 // Define types for our data

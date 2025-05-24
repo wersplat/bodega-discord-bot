@@ -1,14 +1,15 @@
-declare const DiscordSDK: any;
+import { DiscordSDK } from "@discord/embedded-app-sdk";
+
+const discordSdk = new DiscordSDK(process.env.CLIENT_ID!);
 
 window.addEventListener('DOMContentLoaded', async () => {
-  try {
-    await DiscordSDK.ready();
-    const user = await DiscordSDK.commands.getCurrentUser();
-    const el = document.getElementById('user-info');
-    if (el && user) {
-      el.textContent = `Welcome, ${user.username}#${user.discriminator}`;
-    }
-  } catch (err) {
-    console.error('Failed to load Discord SDK:', err);
+  await discordSdk.ready();
+  const button = document.getElementById('open-link');
+  if (button) {
+    button.addEventListener('click', () => {
+      discordSdk.commands.openExternalLink({
+        url: "https://docker-image-production-6e4e.up.railway.app/category/news"
+      });
+    });
   }
 });

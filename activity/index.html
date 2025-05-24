@@ -4,48 +4,37 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Discord Activity - Google Sheet</title>
-  <style>
-    body, html {
-      margin: 0;
-      padding: 0;
-      height: 100%;
-      overflow: hidden;
-      background-color: #36393f;
-      font-family: 'Whitney', 'Helvetica Neue', Helvetica, Arial, sans-serif;
-    }
-    .container {
-      width: 100%;
-      height: 100vh;
-      display: flex;
-      flex-direction: column;
-    }
-    .header {
-      background-color: #2f3136;
-      color: #dcddde;
-      padding: 10px 20px;
-      text-align: center;
-      box-shadow: 0 2px 5px rgba(0,0,0,0.2);
-    }
-    .sheet-container {
-      flex: 1;
-      overflow: hidden;
-    }
-    iframe {
-      width: 100%;
-      height: 100%;
-      border: none;
-      background: #fff;
-    }
-  </style>
+  <link rel="stylesheet" href="styles.css">
+  <script>
+    // Set the Discord Client ID for the SDK
+    window.ENV = {
+      CLIENT_ID: process.env.DISCORD_CLIENT_ID || '1234567890123456789' // Will be replaced during build
+    };
+  </script>
 </head>
 <body>
   <div class="container">
     <div class="header">
       <h1>Discord Activity - Google Sheet</h1>
+      <div class="actions">
+        <button id="refreshData" class="btn btn-small">↻ Refresh</button>
+        <button id="openSheet" class="btn btn-small">Open in Browser</button>
+      </div>
     </div>
-    <div class="sheet-container">
-      <iframe src="https://docs.google.com/spreadsheets/d/e/2PACX-1vRV_Tz8yKtGZne961tId4A2Cdit7ZYGMJ8sinYHo_nX1SKj_VqAIi2haBbSd-UsUpVmkTFD-RDGezIt/pubhtml?widget=true&amp;headers=false"></iframe>
+    
+    <div id="loading" class="loading">Loading data...</div>
+    <div id="error" class="error" style="display: none;"></div>
+    
+    <div id="content" class="table-container" style="display: none;">
+      <table id="data-table">
+        <thead>
+          <tr id="table-headers"></tr>
+        </thead>
+        <tbody id="table-body"></tbody>
+      </table>
     </div>
   </div>
+  
+  <script type="module" src="/activity/client.js"></script>
 </body>
 </html>

@@ -1,10 +1,12 @@
 import { DiscordSDK } from "@discord/embedded-app-sdk";
 
-// Get Google Sheets URL from window object set in index.html
-const GOOGLE_SHEETS_CSV_URL = (window as any).GOOGLE_SHEETS_CSV_URL;
-
-if (!GOOGLE_SHEETS_CSV_URL) {
-  console.error('Google Sheets URL is not set');
+// Extend the Window interface to include ENV
+declare global {
+  interface Window {
+    ENV: {
+      CLIENT_ID: string;
+    };
+  }
 }
 
 // Define types for our data
@@ -12,93 +14,56 @@ interface DataRow {
   [key: string]: string;
 }
 
-// Discord SDK setup
-const discordSdk = new (window as any).DiscordSDK(process.env.CLIENT_ID!);
-
 // DOM Elements
 const loadingElement = document.getElementById('loading') as HTMLElement;
 const errorElement = document.getElementById('error') as HTMLElement;
 const contentElement = document.getElementById('content') as HTMLElement;
 const tableHeaders = document.getElementById('table-headers') as HTMLElement;
 const tableBody = document.getElementById('table-body') as HTMLElement;
+const refreshButton = document.getElementById('refreshData') as HTMLElement;
+const openSheetButton = document.getElementById('openSheet') as HTMLElement;
 
-// Parse CSV string to array of objects
-function parseCSV(csvText: string): DataRow[] {
-  const lines = csvText.split('\n').filter(line => line.trim() !== '');
-  if (lines.length === 0) return [];
-  
-  const headers = lines[0].split(',').map(header => header.trim());
-  const result: DataRow[] = [];
-  
-  for (let i = 1; i < lines.length; i++) {
-    const values: string[] = [];
-    let currentValue = '';
-    let inQuotes = false;
-    
-    for (let j = 0; j < lines[i].length; j++) {
-      const char = lines[i][j];
-      
-      if (char === '"') {
-        inQuotes = !inQuotes;
-      } else if (char === ',' && !inQuotes) {
-        values.push(currentValue);
-        currentValue = '';
-      } else {
-        currentValue += char;
-      }
-    }
-    
-    // Add the last value
-    values.push(currentValue);
-    
-    // Create an object with headers as keys
-    const row: DataRow = {};
-    headers.forEach((header, index) => {
-      row[header] = values[index] || '';
-    });
-    
-    result.push(row);
-  }
-  
-  return result;
-}
+// API endpoint for fetching sheet data
+const API_ENDPOINT = '/api/sheet-data';
 
-// Fetch data from Google Sheets
+// Google Sheets URL for direct viewing
+const GOOGLE_SHEETS_URL = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vRV_Tz8yKtGZne961tId4A2Cdit7ZYGMJ8sinYHo_nX1SKj_VqAIi2haBbSd-UsUpVmkTFD-RDGezIt/pubhtml?widget=true&headers=false';
+
+// Initialize the Discord SDK
+const discordSdk = new DiscordSDK(window.ENV.CLIENT_ID);
+
+// Fetch data from our backend API
 async function fetchData(): Promise<void> {
   try {
-    loadingElement.style.display = 'block';
-    errorElement.style.display = 'none';
-    contentElement.style.display = 'none';
+    if (loadingElement) loadingElement.style.display = 'block';
+    if (errorElement) errorElement.style.display = 'none';
+    if (contentElement) contentElement.style.display = 'none';
     
-    const response = await fetch(GOOGLE_SHEETS_CSV_URL);
+    const response = await fetch(API_ENDPOINT);
     if (!response.ok) {
       throw new Error(`HTTP error! status: ${response.status}`);
     }
     
-    const csvText = await response.text();
-    const data = parseCSV(csvText);
+    const data = await response.json() as DataRow[];
     
     if (data.length === 0) {
       throw new Error('No data found in the sheet');
     }
     
     renderTable(data);
-    
-    // Refresh data every 30 seconds
-    setTimeout(fetchData, 30000);
   } catch (error) {
     console.error('Error fetching data:', error);
     const errorMessage = error instanceof Error ? error.message : 'An unknown error occurred';
     showError(`Error loading data: ${errorMessage}`);
-    // Retry after 10 seconds on error
-    setTimeout(fetchData, 10000);
   } finally {
-    loadingElement.style.display = 'none';
+    if (loadingElement) loadingElement.style.display = 'none';
   }
 }
 
 // Render data in the table
 function renderTable(data: DataRow[]): void {
+  if (!tableHeaders || !tableBody || !contentElement) return;
+  
   // Clear previous data
   tableHeaders.innerHTML = '';
   tableBody.innerHTML = '';
@@ -129,30 +94,64 @@ function renderTable(data: DataRow[]): void {
 
 // Show error message
 function showError(message: string): void {
+  if (!errorElement) return;
   errorElement.textContent = message;
   errorElement.style.display = 'block';
 }
 
+// Handle opening the Google Sheet
+async function handleOpenSheet() {
+  try {
+    // Try to open in Discord's external browser
+    await discordSdk.commands.openExternalLink({
+      url: GOOGLE_SHEETS_URL
+    });
+  } catch (error) {
+    console.error('Error opening sheet in Discord:', error);
+    // Fallback to regular window.open
+    window.open(GOOGLE_SHEETS_URL, '_blank');
+  }
+}
+
 // Initialize the app
-async function init(): Promise<void> {
+async function initApp() {
   try {
     await discordSdk.ready();
     console.log('Discord SDK is ready');
     
-    // Start fetching data
+    // Set up event listeners
+    if (openSheetButton) {
+      openSheetButton.addEventListener('click', handleOpenSheet);
+    }
+    
+    if (refreshButton) {
+      refreshButton.addEventListener('click', fetchData);
+    }
+    
+    // Initial data fetch
     fetchData();
     
+    // Set up auto-refresh every 30 seconds
+    setInterval(fetchData, 30000);
   } catch (error) {
     console.error('Error initializing Discord SDK:', error);
-    const errorMessage = error instanceof Error ? error.message : 'Failed to initialize Discord';
-    showError(`${errorMessage}. Please try refreshing the page.`);
-    loadingElement.style.display = 'none';
+    showError(`Failed to initialize Discord SDK: ${error instanceof Error ? error.message : 'Unknown error'}`);
+    
+    // Fallback for when not in Discord
+    if (openSheetButton) {
+      openSheetButton.addEventListener('click', () => {
+        window.open(GOOGLE_SHEETS_URL, '_blank');
+      });
+    }
+    
+    // Still try to fetch data even if Discord SDK fails
+    fetchData();
   }
 }
 
-// Start the app when the DOM is fully loaded
+// Initialize the app when the DOM is loaded
 if (document.readyState === 'loading') {
-  document.addEventListener('DOMContentLoaded', init);
+  document.addEventListener('DOMContentLoaded', initApp);
 } else {
-  init();
+  initApp();
 }

@@ -23,7 +23,8 @@ const refreshButton = document.getElementById('refreshData') as HTMLElement;
 const openSheetButton = document.getElementById('openSheet') as HTMLElement;
 
 // API endpoint for fetching sheet data
-const API_ENDPOINT = '/api/sheet-data';
+// Use Discord proxy for API endpoint to comply with Discord Activity CSP
+const API_ENDPOINT = '/.proxy/api/sheet-data';
 
 declare global {
   interface Window {
@@ -37,8 +38,6 @@ declare global {
 // Google Sheets URL for direct viewing
 const GOOGLE_SHEETS_URL = window.ENV.GOOGLE_SHEETS_CSV_URL;
 
-// Initialize the Discord SDK
-// Using window.DiscordSDK which is provided by Discord's script
 import { DiscordSDK } from "@discord/embedded-app-sdk";
 
 // Initialize the Discord SDK using the npm package import

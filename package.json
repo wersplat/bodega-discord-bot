@@ -3,7 +3,8 @@
   "version": "0.1.0",
   "main": "dist/main.js",
   "scripts": {
-    "build": "tsc",
+    "build": "tsc && npm run copy-activity",
+    "copy-activity": "xcopy /Y /I /E activity dist\\activity",
     "start": "node dist/main.js",
     "dev": "ts-node-dev main.ts",
     "lint": "eslint . --ext .ts",

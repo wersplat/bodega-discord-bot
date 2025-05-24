@@ -26,21 +26,24 @@ const openSheetButton = document.getElementById('openSheet') as HTMLElement;
 // API endpoint for fetching sheet data
 const API_ENDPOINT = '/api/sheet-data';
 
+declare global {
+  interface Window {
+    ENV: {
+      DISCORD_CLIENT_ID: string;
+      GOOGLE_SHEETS_CSV_URL: string;
+    };
+  }
+}
+
 // Google Sheets URL for direct viewing
 const GOOGLE_SHEETS_URL = window.ENV.GOOGLE_SHEETS_CSV_URL;
 
 // Initialize the Discord SDK
 // Using window.DiscordSDK which is provided by Discord's script
-// Defensive initialization for Discord SDK from CDN
-const DiscordSdkCtor = (window as any).DiscordSDK || (window as any).DiscordSdk;
-let discordSdk: any = null;
+import { DiscordSDK } from "@discord/embedded-app-sdk";
 
-if (DiscordSdkCtor) {
-  discordSdk = new DiscordSdkCtor(window.ENV.DISCORD_CLIENT_ID);
-} else {
-  console.error('DiscordSDK not loaded or not a constructor!');
-  console.log('DiscordSDK global:', (window as any).DiscordSDK, (window as any).DiscordSdk);
-}
+// Initialize the Discord SDK using the npm package import
+const discordSdk = new DiscordSDK(window.ENV.DISCORD_CLIENT_ID);
 
 // Fetch data from our backend API
 async function fetchData(): Promise<void> {

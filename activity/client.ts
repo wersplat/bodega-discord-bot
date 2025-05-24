@@ -1,8 +1,11 @@
 import { DiscordSDK } from "@discord/embedded-app-sdk";
 
-// Google Sheets CSV URL - Replace with your own Google Sheet's published CSV URL
-// To get this URL: File > Share > Publish to web > Select CSV format > Publish
-const GOOGLE_SHEETS_CSV_URL = process.env.GOOGLE_SHEETS_CSV_URL!;
+// Get Google Sheets URL from window object set in index.html
+const GOOGLE_SHEETS_CSV_URL = (window as any).GOOGLE_SHEETS_CSV_URL;
+
+if (!GOOGLE_SHEETS_CSV_URL) {
+  console.error('Google Sheets URL is not set');
+}
 
 // Define types for our data
 interface DataRow {

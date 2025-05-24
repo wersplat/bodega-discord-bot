@@ -5,6 +5,10 @@
   <title>Discord Activity</title>
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <script src="https://discord.com/assets/16c8bd5bd52.js"></script>
+  <script>
+    // Set the Google Sheets URL
+    window.GOOGLE_SHEETS_CSV_URL = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vRV_Tz8yKtGZne961tId4A2Cdit7ZYGMJ8sinYHo_nX1SKj_VqAIi2haBbSd-UsUpVmkTFD-RDGezIt/pub?output=csv';
+  </script>
   <style>
     body {
       margin: 0;
@@ -80,6 +84,7 @@
       </div>
     </div>
   </div>
-  <script type="module" src="./client.js"></script>
+  <!-- Load the compiled JavaScript -->
+  <script type="module" src="/activity/client.js"></script>
 </body>
 </html>

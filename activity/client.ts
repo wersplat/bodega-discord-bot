@@ -31,7 +31,7 @@ const GOOGLE_SHEETS_URL = window.ENV.GOOGLE_SHEETS_CSV_URL;
 
 // Initialize the Discord SDK
 // Using window.DiscordSDK which is provided by Discord's script
-/ Defensive initialization for Discord SDK from CDN
+// Defensive initialization for Discord SDK from CDN
 const DiscordSdkCtor = (window as any).DiscordSDK || (window as any).DiscordSdk;
 let discordSdk: any = null;
 

@@ -5,6 +5,7 @@
 interface Window {
   ENV: {
     DISCORD_CLIENT_ID: string;
+    GOOGLE_SHEETS_CSV_URL: string;
   };
 }
 

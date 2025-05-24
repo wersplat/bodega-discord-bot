@@ -111,11 +111,6 @@ function parseCSV(csvText: string) {
   return result;
 }
 
-const PORT = process.env.PORT || 3000;
-app.listen(PORT, () => {
-  logger.info(`Activity server running on http://localhost:${PORT}/activity`);
-});
-
 // --- Logger Setup ---
 const logger = createLogger({
   level: 'info',
@@ -125,6 +120,28 @@ const logger = createLogger({
   ),
   transports: [new transports.Console()],
 });
+
+const PORT = process.env.PORT || 3000;
+try {
+  app.listen(PORT, () => {
+    logger.info('\n' +
+      '==========================================\n' +
+      '✅ Activity server is LIVE!\n' +
+      '📊 Google Sheets Activity App integrated.\n' +
+      `🌐 Access: http://localhost:${PORT}/activity\n` +
+      '==========================================\n'
+    );
+  });
+} catch (err) {
+  logger.error('\n' +
+    '==========================================\n' +
+    '❌ Activity server FAILED TO START!\n' +
+    '🚨 Please check configuration and logs.\n' +
+    '==========================================\n'
+  );
+  process.exit(1);
+}
+
 
 // --- Client Setup ---
 const client = new Client({ intents: [GatewayIntentBits.Guilds] });
@@ -145,7 +162,7 @@ const sentryOptions: NodeOptions = {
     }) as any,
   ],
   tracesSampleRate: 1.0,
-  environment: process.env.NODE_ENV || "development",
+  environment: process.env.NODE_ENV || "production",
   release: "discord-bot@1.0.0",
 };
 

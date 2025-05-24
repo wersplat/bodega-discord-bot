@@ -8,14 +8,17 @@
     "dev": "ts-node-dev main.ts",
     "lint": "eslint . --ext .ts",
     "format": "prettier --write .",
-    "register": "ts-node scripts/deploy-commands.ts"
+    "register": "ts-node scripts/deploy-commands.ts",
+    "serve:activity": "node dist/main.js"
   },
   "dependencies": {
     "@sentry/integrations": "^7.114.0",
     "@sentry/node": "^9.19.0",
+    "@types/express": "^5.0.2",
     "cron": "^4.3.0",
     "discord.js": "^14.19.2",
     "dotenv": "^16.5.0",
+    "express": "^4.21.2",
     "form-data": "^4.0.2",
     "node-fetch": "^2.7.0",
     "winston": "^3.17.0"

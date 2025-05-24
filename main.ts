@@ -11,7 +11,18 @@ import { join } from 'path';
 import { registerCommands } from './utils/registerCommands';
 import { startScheduler } from './utils/scheduler';
 import fetch from 'node-fetch';
+import express from 'express';
+import path from 'path';
 
+// --- Express Web Server for Activity Webview ---
+const app = express();
+const activityPath = path.join(__dirname, '../activity');
+app.use('/activity', express.static(activityPath));
+
+const PORT = process.env.PORT || 3000;
+app.listen(PORT, () => {
+  console.log(`Activity webview available at http://localhost:${PORT}/activity`);
+});
 
 // --- Logger Setup ---
 const logger = createLogger({

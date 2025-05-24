@@ -8,13 +8,11 @@ RUN npm ci
 COPY . .
 
 # Optional: install Doppler + Sentry CLI
-RUN apk add --no-cache curl bash gnupg ca-certificates \
- && curl -sLf --retry 3 --tlsv1.2 --proto "=https" \
-     'https://packages.doppler.com/public/cli/gpg.DE2A7741A397C129.key' \
-     | gpg --dearmor -o /usr/share/keyrings/doppler-archive-keyring.gpg \
- && echo "https://packages.doppler.com/public/cli/alpine/doppler.apk" >> /etc/apk/repositories \
+RUN wget -q -t3 'https://packages.doppler.com/public/cli/rsa.8004D9FF50437357.key' -O /etc/apk/keys/cli@doppler-8004D9FF50437357.rsa.pub \
+ && echo 'https://packages.doppler.com/public/cli/alpine/any-version/main' >> /etc/apk/repositories \
  && apk add --no-cache doppler \
  && npm install -g @sentry/cli
+
 
 # Use Doppler to     inject runtime secrets
 EXPOSE 3000

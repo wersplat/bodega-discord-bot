@@ -26,7 +26,7 @@ const openSheetButton = document.getElementById('openSheet') as HTMLElement;
 const API_ENDPOINT = '/api/sheet-data';
 
 // Google Sheets URL for direct viewing
-const GOOGLE_SHEETS_URL = process.env.GOOGLE_SHEETS_CSV_URL;
+const GOOGLE_SHEETS_URL = window.ENV.GOOGLE_SHEETS_CSV_URL;
 
 // Initialize the Discord SDK
 // Using window.DiscordSDK which is provided by Discord's script

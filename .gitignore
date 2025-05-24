@@ -6,3 +6,4 @@ dist/
 
 # Env
 .env
+activity-server/bot-service-creds..json

@@ -1,99 +1,82 @@
-import express from 'express';
-import cors from 'cors';
-import fetch from 'node-fetch';
+import Fastify from 'fastify';
+import axios from 'axios';
+
+import { google } from 'googleapis';
+import { JWT } from 'google-auth-library';
 import dotenv from 'dotenv';
-import path from 'path';
 
 dotenv.config();
 
-const app = express();
-const PORT = process.env.PORT || 3000;
+const fastify = Fastify();
 
-// Enable CORS for all routes
-app.use(cors());
+const SCOPES = ['https://www.googleapis.com/auth/spreadsheets.readonly'];
+const SHEET_ID = process.env.GOOGLE_SHEET_ID!;
+const RANGE = 'Standings!A2:D';
 
-// Serve static files from the dist/activity directory
-app.use(express.static(path.join(__dirname, '../dist/activity')));
+// Root test route
+fastify.get('/', async (req, reply) => {
+  reply.send({ status: 'Bot backend running' });
+});
 
-// API endpoint to fetch Google Sheets data
-app.get('/api/sheet-data', async (req, res) => {
+// Live standings route for Discord Activity
+fastify.get('/standings', async (req, reply) => {
   try {
-    const GOOGLE_SHEETS_URL = process.env.GOOGLE_SHEETS_CSV_URL;
-    if (!GOOGLE_SHEETS_URL) {
-      return res.status(500).json({ error: 'Google Sheets URL not configured' });
-    }
+    const creds = JSON.parse(process.env.GOOGLE_CREDS_JSON!);
+    const auth = new google.auth.GoogleAuth({
+      credentials: creds,
+      scopes: SCOPES,
+    });
 
-    const response = await fetch(GOOGLE_SHEETS_URL);
-    if (!response.ok) {
-      return res.status(response.status).json({ 
-        error: `Failed to fetch Google Sheets data: ${response.statusText}` 
-      });
-    }
+    const client = await auth.getClient();
+    const sheets = google.sheets({ version: 'v4', auth: client as JWT });
 
-    const csvData = await response.text();
-    const parsedData = parseCSV(csvData);
-    
-    res.json(parsedData);
+    const res = await sheets.spreadsheets.values.get({
+      spreadsheetId: SHEET_ID,
+      range: RANGE,
+    });
+
+    const values = res.data.values || [];
+    const rows = values
+      .map(row => `<tr><td>${row[0]}</td><td>${row[1]}</td><td>${row[2]}</td><td>${row[3]}</td></tr>`)
+      .join('');
+
+    const html = `
+      <!DOCTYPE html>
+      <html>
+      <head>
+        <title>Standings</title>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1">
+        <style>
+          body { font-family: sans-serif; background: #111; color: white; padding: 2em; text-align: center; }
+          table { width: 90%; margin: auto; border-collapse: collapse; }
+          th, td { padding: 0.5em 1em; border-bottom: 1px solid #444; }
+          th { background: #222; }
+          tr:hover { background: #333; }
+        </style>
+      </head>
+      <body>
+        <h1>Live Standings</h1>
+        <table>
+          <thead><tr><th>Team</th><th>W</th><th>L</th><th>Pts</th></tr></thead>
+          <tbody>${rows}</tbody>
+        </table>
+      </body>
+      </html>
+    `;
+
+    reply.type('text/html').send(html);
   } catch (error) {
-    console.error('Error fetching sheet data:', error);
-    res.status(500).json({ 
-      error: error instanceof Error ? error.message : 'Unknown error occurred' 
-    });
+    console.error('[STANDINGS ERROR]', error);
+    reply.code(500).send('Failed to load standings');
   }
 });
 
-// Helper function to parse CSV data
-function parseCSV(csvText: string) {
-  const lines = csvText.split('\n').filter(line => line.trim() !== '');
-  if (lines.length === 0) return [];
-  
-  const headers = lines[0].split(',').map(header => header.trim());
-  const result = [];
-  
-  for (let i = 1; i < lines.length; i++) {
-    const values: string[] = [];
-    let currentValue = '';
-    let inQuotes = false;
-    
-    for (let j = 0; j < lines[i].length; j++) {
-      const char = lines[i][j];
-      
-      if (char === '"') {
-        inQuotes = !inQuotes;
-      } else if (char === ',' && !inQuotes) {
-        values.push(currentValue);
-        currentValue = '';
-      } else {
-        currentValue += char;
-      }
-    }
-    
-    // Add the last value
-    values.push(currentValue);
-    
-    // Create an object with headers as keys
-    const row: Record<string, string> = {};
-    headers.forEach((header, index) => {
-      row[header] = values[index] || '';
-    });
-    
-    result.push(row);
+// Start server
+fastify.listen({ port: 3000, host: '0.0.0.0' }, err => {
+  if (err) {
+    console.error(err);
+    process.exit(1);
   }
-  
-  return result;
-}
-
-// Discord OAuth2 callback endpoint
-app.get('/oauth/callback', (req, res) => {
-  // This would handle the OAuth flow if needed
-  res.send('Authentication successful! You can close this window.');
-});
-
-// Catch-all route to serve the main HTML file
-app.get('*', (req, res) => {
-  res.sendFile(path.join(__dirname, '../dist/activity/index.html'));
-});
-
-app.listen(PORT, () => {
-  console.log(`Server running on http://localhost:${PORT}`);
+  console.log('Bot backend server running on http://localhost:3000');
 });

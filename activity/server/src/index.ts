@@ -1,8 +1,8 @@
 import { Hono } from "hono";
 
 type Bindings = {
-  CLIENT_ID: string;
-  CLIENT_SECRET: string;
+  DISCORD_CLIENT_ID: string;
+  DISCORD_CLIENT_SECRET: string;
   GOOGLE_SHEET_ID: string; // For Google Sheets integration
   GOOGLE_API_KEY: string;  // For Google Sheets integration
 };
@@ -15,7 +15,7 @@ app.get("/", (c) => {
 
 app.get("/api/config", (c) => {
   return c.json({
-    clientId: c.env.CLIENT_ID
+    clientId: c.env.DISCORD_CLIENT_ID
     // googleSheetId: c.env.GOOGLE_SHEET_ID, // Intentionally commented out for now
     // googleApiKey: c.env.GOOGLE_API_KEY,    // Intentionally commented out for now
   });
@@ -51,8 +51,8 @@ app.post("/token", async (c) => {
         "Content-Type": "application/x-www-form-urlencoded",
       },
       body: new URLSearchParams({
-        client_id: c.env.CLIENT_ID,
-        client_secret: c.env.CLIENT_SECRET,
+        client_id: c.env.DISCORD_CLIENT_ID,
+        client_secret: c.env.DISCORD_CLIENT_SECRET,
         grant_type: "authorization_code",
         code,
       }),

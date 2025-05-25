@@ -25,7 +25,7 @@ Go to [Discord Developer Portal](https://discord.com/developers/applications) an
 For client side, fill in the environment variables in `client/.env.example` and rename it to `client/.env`.
 
 ```
-VITE_CLIENT_ID=
+VITE_DISCORD_CLIENT_ID=
 ```
 
 Server is using `wrangler.toml` for environment variables. Create a `wrangler.toml` file in the `server` directory with the following content:
@@ -34,8 +34,8 @@ Server is using `wrangler.toml` for environment variables. Create a `wrangler.to
 name = "discord-activity-server"
 
 [vars]
-CLIENT_ID = ""
-CLIENT_SECRET = ""
+DISCORD_CLIENT_ID = ""
+DISCORD_CLIENT_SECRET = ""
 ```
 
 ## Wrangler

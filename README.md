@@ -53,7 +53,7 @@ The Activity App is fully integrated into the main bot's Express server, elimina
 
    ```bash
    cp .env.example .env
-   # Edit .env with your values: DISCORD_TOKEN, CLIENT_ID, GUILD_ID, API_URL, GOOGLE_SHEET_ID, GOOGLE_CREDS_JSON, etc.
+   # Edit .env with your values: DISCORD_TOKEN, DISCORD_CLIENT_ID, DISCORD_CLIENT_SECRET, GUILD_ID, API_URL, GOOGLE_SHEET_ID, GOOGLE_CREDS_JSON, etc.
    ```
 
 3. **Local development**  

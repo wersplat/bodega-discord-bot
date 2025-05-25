@@ -6,6 +6,25 @@
 ![Discord Bot Uptime](https://img.shields.io/uptimerobot/status/m800447867-6863cbd32f0761f2e5b3b358?label=bot%20uptime)
 ![CI](https://github.com/wersplat/bodega-esports-platform/actions/workflows/ci.yml/badge.svg?branch=master)
 
+# Tech Stack
+
+**Languages & Frameworks**
+- [Node.js](https://nodejs.org/en/download/) (v18 or newer recommended)
+- [TypeScript](https://www.typescriptlang.org/)
+- [Express](https://expressjs.com/) (web server)
+- [Discord.js](https://discord.js.org) (Discord bot framework)
+
+**Key Libraries**
+- [googleapis](https://www.npmjs.com/package/googleapis) & [google-auth-library](https://www.npmjs.com/package/google-auth-library) (Google Sheets integration)
+- [dotenv](https://www.npmjs.com/package/dotenv) (env config)
+- [winston](https://www.npmjs.com/package/winston) (logging)
+- [Sentry](https://sentry.io) (error monitoring)
+
+**Cloud & Services**
+- [Railway](https://railway.app) (deployment)
+- [UptimeRobot](https://uptimerobot.com) (monitoring)
+- [GitHub Actions](https://github.com/features/actions) (CI/CD)
+
 # Bodega Discord Bot
 
 A unified TypeScript Discord.js bot and web app for the Bodega Esports Platform.

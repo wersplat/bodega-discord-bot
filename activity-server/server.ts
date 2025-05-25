@@ -1,5 +1,4 @@
 import Fastify from 'fastify';
-import axios from 'axios';
 
 import { google } from 'googleapis';
 import { JWT } from 'google-auth-library';
@@ -19,7 +18,7 @@ fastify.get('/', async (req, reply) => {
 });
 
 // Live standings route for Discord Activity
-fastify.get('/standings', async (req, reply) => {
+fastify.get('/standings', async (req: any, reply: any) => {
   try {
     const creds = JSON.parse(process.env.GOOGLE_CREDS_JSON!);
     const auth = new google.auth.GoogleAuth({

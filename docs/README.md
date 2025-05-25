@@ -77,7 +77,6 @@ bodega-discord-bot/
 ├── utils/             # Shared helpers (API calls, scheduler)
 ├── .env.example       # Example environment variables
 ├── .gitignore
-├── Dockerfile         # (if present) container build config
 ├── main.ts            # Bootstraps bot, web server, and Activity App
 ├── package.json
 ├── sentry.ts          # Sentry integration
@@ -89,7 +88,7 @@ bodega-discord-bot/
 - Follow KISS: keep commands small & focused  
 - Add new commands under `commands/`  
 - Write tests alongside new features (TBD)  
-- Submit PR to the `react` branch
+- Submit PR to the `master` branch
 
 ## 📄 License
 

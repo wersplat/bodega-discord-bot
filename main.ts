@@ -12,104 +12,8 @@ import { join } from 'path';
 import { registerCommands } from './utils/registerCommands';
 import { startScheduler } from './utils/scheduler';
 import fetch from 'node-fetch';
-import express, { Request, Response } from 'express';
-import path from 'path';
-
-// --- Express Web Server for Activity Webview ---
-const app = express();
-const activityPath = path.join(__dirname, 'activity');
-
-// Middleware to inject environment variables into HTML
-app.use('/activity', (req, res, next) => {
-  if (req.path === '/index.html' || req.path === '/') {
-    const indexPath = path.join(activityPath, 'index.html');
-    let html = fs.readFileSync(indexPath, 'utf8');
-    
-    // Replace the placeholder with actual environment variable
-    html = html.replace('__DISCORD_CLIENT_ID__', process.env.DISCORD_CLIENT_ID || '');
-    
-    res.send(html);
-  } else {
-    next();
-  }
-});
-
-// Serve static files
-app.use('/activity', express.static(activityPath));
-
-// Enable CORS for all routes
-import cors from 'cors';
-app.use(cors());
-
-// API endpoint to fetch Google Sheets data
-app.get('/api/sheet-data', function(req: Request, res: Response) {
-  (async () => {
-    try {
-      const GOOGLE_SHEETS_URL = process.env.GOOGLE_SHEETS_CSV_URL;
-      if (!GOOGLE_SHEETS_URL) {
-        return res.status(500).json({ error: 'Google Sheets URL not configured' });
-      }
-
-      const response = await fetch(GOOGLE_SHEETS_URL);
-      if (!response.ok) {
-        return res.status(response.status).json({ 
-          error: `Failed to fetch Google Sheets data: ${response.statusText}` 
-        });
-      }
-
-      const csvData = await response.text();
-      const parsedData = parseCSV(csvData);
-      
-      res.json(parsedData);
-    } catch (error) {
-      logger.error('Error fetching sheet data:', error);
-      res.status(500).json({ 
-        error: error instanceof Error ? error.message : 'Unknown error occurred' 
-      });
-    }
-  })();
-});
-
-// Helper function to parse CSV data
-function parseCSV(csvText: string) {
-  const lines = csvText.split('\n').filter(line => line.trim() !== '');
-  if (lines.length === 0) return [];
-  
-  const headers = lines[0].split(',').map(header => header.trim());
-  const result = [];
-  
-  for (let i = 1; i < lines.length; i++) {
-    const values: string[] = [];
-    let currentValue = '';
-    let inQuotes = false;
-    
-    for (let j = 0; j < lines[i].length; j++) {
-      const char = lines[i][j];
-      
-      if (char === '"') {
-        inQuotes = !inQuotes;
-      } else if (char === ',' && !inQuotes) {
-        values.push(currentValue);
-        currentValue = '';
-      } else {
-        currentValue += char;
-      }
-    }
-    
-    // Add the last value
-    values.push(currentValue);
-    
-    // Create an object with headers as keys
-    const row: Record<string, string> = {};
-    headers.forEach((header, index) => {
-      row[header] = values[index] || '';
-    });
-    
-    result.push(row);
-  }
-  
-  return result;
-}
+import { createApp, Get } from '@robojs/flashcore';
+import { getStandingsFromSheets } from './utils/fetchSheets';
 
 // --- Logger Setup ---
 const logger = createLogger({
@@ -120,27 +24,6 @@ const logger = createLogger({
   ),
   transports: [new transports.Console()],
 });
-
-const PORT = process.env.PORT || 3000;
-try {
-  app.listen(PORT, () => {
-    logger.info('\n' +
-      '==========================================\n' +
-      '✅ Activity server is LIVE!\n' +
-      '📊 Google Sheets Activity App integrated.\n' +
-      `🌐 Access: http://localhost:${PORT}/activity\n` +
-      '==========================================\n'
-    );
-  });
-} catch (err) {
-  logger.error('\n' +
-    '==========================================\n' +
-    '❌ Activity server FAILED TO START!\n' +
-    '🚨 Please check configuration and logs.\n' +
-    '==========================================\n'
-  );
-  process.exit(1);
-}
 
 
 // --- Client Setup ---
@@ -232,6 +115,29 @@ client.on('interactionCreate', async (interaction: Interaction) => {
       await interaction.reply({ content: '⚠️ Error handling your request.', ephemeral: true });
     }
   }
+});
+
+// --- Flashcore Activity Server ---
+const activityApp = createApp();
+
+// Health check endpoint
+class ActivityController {
+  @Get('/healthz')
+  health() {
+    return { status: 'ok' };
+  }
+
+  @Get('/standings')
+  async standings() {
+    return await getStandingsFromSheets();
+  }
+}
+
+activityApp.registerController(ActivityController);
+
+const HTTP_PORT = parseInt(process.env.PORT || '3000', 10);
+activityApp.listen(HTTP_PORT, () => {
+  logger.info(`⚡ Flashcore server listening on port ${HTTP_PORT}`);
 });
 
 // --- Uptime Ping (UptimeRobot) ---

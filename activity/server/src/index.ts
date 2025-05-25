@@ -132,7 +132,7 @@ app.post("/token", async (c) => {
 });
 
 
-app.get('/sheet-data', async (c) => {
+app.get('/api/sheet-data', async (c) => {
   const baseSheetUrl = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vRV_Tz8yKtGZne961tId4A2Cdit7ZYGMJ8sinYHo_nX1SKj_VqAIi2haBbSd-UsUpVmkTFD-RDGezIt/pub';
   const requestedGid = c.req.query('gid');
   const defaultGid = '2116993983'; // Default to "Road-to-25K-Teams"

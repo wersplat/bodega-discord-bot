@@ -1,15 +1,16 @@
-![Node.js](https://img.shields.io/badge/node-18.x-blue?logo=node.js)
+![Node.js](https://img.shields.io/badge/node.js-18%2B-brightgreen?logo=node.js)
 ![TypeScript](https://img.shields.io/badge/type-checked-blue?logo=typescript)
 ![Discord.js](https://img.shields.io/npm/v/discord.js?label=discord.js&color=blueviolet)
-![License](https://img.shields.io/github/license/wersplat/bodega-esports-platform)
-![Railway](https://img.shields.io/badge/deployed-on%20railway-0B0D0E?style=flat&logo=railway&logoColor=white)
+![License](https://img.shields.io/badge/license-ISC-blue.svg)
+![Railway Deploy](https://img.shields.io/badge/-Railway-0B0D0E?style=flat&logo=railway&logoColor=white)
 ![Discord Bot Uptime](https://img.shields.io/uptimerobot/status/m800447867-6863cbd32f0761f2e5b3b358?label=bot%20uptime)
-![CI](https://github.com/wersplat/bodega-esports-platform/actions/workflows/ci.yml/badge.svg?branch=react)
+![CI](https://github.com/wersplat/bodega-esports-platform/actions/workflows/ci.yml/badge.svg?branch=master)
 
 # Bodega Discord Bot
 
-A TypeScript Discord.js bot for the Bodega Esports Platform.  
-Provides roster lookups, announcement, and moderation tools. Now includes a unified Activity App and Google Sheets integration.
+A unified TypeScript Discord.js bot and web app for the Bodega Esports Platform.
+
+This single codebase powers all Discord bot features—roster lookups, announcements, moderation, OCR stat parsing—as well as the Activity App and web endpoints. The Activity App (including the live `/standings` route) is now fully integrated into the main server, providing seamless access to Google Sheets-powered standings and more. All integrations (Google Sheets, Discord, Sentry, etc.) are managed together for easier development and deployment.
 
 ---
 

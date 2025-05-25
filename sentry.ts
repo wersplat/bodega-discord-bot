@@ -13,6 +13,6 @@ const sentryOptions: Sentry.NodeOptions = {
   release: "discord-bot@1.0.0",
 };
 
-Sentry.init(sentryOptions);
+// Sentry.init(sentryOptions);
 
 export default Sentry;

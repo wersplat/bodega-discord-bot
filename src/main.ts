@@ -157,7 +157,7 @@ const sentryOptions: NodeOptions = {
   release: "discord-bot@1.0.0",
 };
 
-Sentry.init(sentryOptions);
+// Sentry.init(sentryOptions);
 
 // Uptime Ping (UptimeRobot)
 if (process.env.UPTIMEROBOT_HEARTBEAT_URL) {
@@ -171,12 +171,12 @@ if (process.env.UPTIMEROBOT_HEARTBEAT_URL) {
 // Crash Safety
 process.on('unhandledRejection', (err: Error) => {
   console.error('Unhandled Rejection:', err);
-  Sentry.captureException(err);
+  // Sentry.captureException(err);
 });
 
 process.on('uncaughtException', (err: Error) => {
   console.error('Uncaught Exception:', err);
-  Sentry.captureException(err);
+  // Sentry.captureException(err);
   process.exit(1);
 });
 

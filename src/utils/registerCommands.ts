@@ -12,8 +12,12 @@ export async function registerCommands() {
   const commands: any[] = [];
   for (const file of readdirSync(commandsDir).filter(f => f.endsWith(ext))) {
     // eslint-disable-next-line @typescript-eslint/no-var-requires
-    const { default: cmd } = require(join(commandsDir, file));
-    commands.push(cmd.data.toJSON());
+    const commandModule = require(join(commandsDir, file));
+    if (commandModule && commandModule.data) {
+      commands.push(commandModule.data.toJSON());
+    } else {
+      console.warn(`[WARNING] The command at ${join(commandsDir, file)} is missing a "data" export, or the module is empty.`);
+    }
   }
 
   const rest = new REST({ version: '10' }).setToken(process.env.DISCORD_TOKEN!);

@@ -9,6 +9,64 @@ type Bindings = {
 
 const app = new Hono<{ Bindings: Bindings }>();
 
+// Helper function to parse CSV to JSON
+function csvToJSON(csv: string): Array<Record<string, string>> {
+  const lines = csv.trim().split('\n');
+  if (lines.length === 0) {
+    return [];
+  }
+  // Robust header splitting: handles headers with commas if they are quoted
+  const headersLine = lines[0];
+  const headers: string[] = [];
+  let currentHeader = '';
+  let inHeaderQuotes = false;
+  for (const char of headersLine) {
+    if (char === '"') {
+      inHeaderQuotes = !inHeaderQuotes;
+    } else if (char === ',' && !inHeaderQuotes) {
+      headers.push(currentHeader.trim().replace(/^"|"$/g, ''));
+      currentHeader = '';
+    } else {
+      currentHeader += char;
+    }
+  }
+  headers.push(currentHeader.trim().replace(/^"|"$/g, '')); // Add the last header
+
+  const result: Array<Record<string, string>> = [];
+  for (let i = 1; i < lines.length; i++) {
+    const obj: { [key: string]: string } = {};
+    const currentLineChars = lines[i].split('');
+    const processedLineValues: string[] = [];
+    let currentValue = '';
+    let inValueQuotes = false;
+
+    for (let charIndex = 0; charIndex < currentLineChars.length; charIndex++) {
+      const char = currentLineChars[charIndex];
+      if (char === '"') {
+        // Handle escaped quotes: if the next char is also a quote, it's an escaped quote
+        if (inValueQuotes && charIndex + 1 < currentLineChars.length && currentLineChars[charIndex + 1] === '"') {
+          currentValue += '"'; // Add one quote to the value
+          charIndex++; // Skip the next quote
+          continue;
+        }
+        inValueQuotes = !inValueQuotes;
+      } else if (char === ',' && !inValueQuotes) {
+        processedLineValues.push(currentValue.trim());
+        currentValue = '';
+      } else {
+        currentValue += char;
+      }
+    }
+    processedLineValues.push(currentValue.trim()); // Add the last value
+
+    for (let j = 0; j < headers.length; j++) {
+      obj[headers[j]] = processedLineValues[j] !== undefined ? processedLineValues[j] : '';
+    }
+    result.push(obj);
+  }
+  return result;
+}
+
 app.get("/", (c) => {
   return c.text("Hello Hono!!");
 });
@@ -71,6 +129,28 @@ app.post("/token", async (c) => {
   });
 
   return c.json({ access_token, error });
+});
+
+
+app.get('/api/sheet-data', async (c) => {
+  const sheetUrl = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vRV_Tz8yKtGZne961tId4A2Cdit7ZYGMJ8sinYHo_nX1SKj_VqAIi2haBbSd-UsUpVmkTFD-RDGezIt/pub?output=csv';
+  try {
+    const response = await fetch(sheetUrl);
+    if (!response.ok) {
+      console.error(`Failed to fetch sheet: ${response.status} ${response.statusText}`);
+      return c.json({ error: 'Failed to fetch sheet data', upstreamStatus: response.status }, { status: response.status });
+    }
+    const csvData = await response.text();
+    if (!csvData) {
+        console.error('Fetched CSV data is empty');
+        return c.json({ error: 'Fetched CSV data is empty'}, 500);
+    }
+    const jsonData = csvToJSON(csvData);
+    return c.json(jsonData);
+  } catch (error: any) {
+    console.error('Error fetching or parsing sheet data:', error.message, error.stack);
+    return c.json({ error: 'Internal server error while processing sheet data', details: error.message }, 500);
+  }
 });
 
 export default app;

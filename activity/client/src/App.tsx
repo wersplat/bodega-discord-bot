@@ -61,7 +61,7 @@ function App() {
         client_id: import.meta.env.VITE_CLIENT_ID,
         response_type: "code",
         state: "",
-        prompt: "none",
+        prompt: "consent",
         scope: ["identify"],
       });
 

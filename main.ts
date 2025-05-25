@@ -41,33 +41,62 @@ app.use('/activity', express.static(activityPath));
 import cors from 'cors';
 app.use(cors());
 
-// API endpoint to fetch Google Sheets data
-app.get('/api/sheet-data', function(req: Request, res: Response) {
-  (async () => {
-    try {
-      const GOOGLE_SHEETS_URL = process.env.GOOGLE_SHEETS_CSV_URL;
-      if (!GOOGLE_SHEETS_URL) {
-        return res.status(500).json({ error: 'Google Sheets URL not configured' });
-      }
+// --- Standings Route (Google Sheets HTML Table) ---
+import { google } from 'googleapis';
+import { JWT } from 'google-auth-library';
+import dotenv from 'dotenv';
+dotenv.config();
 
-      const response = await fetch(GOOGLE_SHEETS_URL);
-      if (!response.ok) {
-        return res.status(response.status).json({ 
-          error: `Failed to fetch Google Sheets data: ${response.statusText}` 
-        });
-      }
+const SCOPES = ['https://www.googleapis.com/auth/spreadsheets.readonly'];
+const SHEET_ID = process.env.GOOGLE_SHEET_ID!;
+const RANGE = 'Standings!A2:D';
 
-      const csvData = await response.text();
-      const parsedData = parseCSV(csvData);
-      
-      res.json(parsedData);
-    } catch (error) {
-      logger.error('Error fetching sheet data:', error);
-      res.status(500).json({ 
-        error: error instanceof Error ? error.message : 'Unknown error occurred' 
-      });
-    }
-  })();
+app.get('/standings', async (req: Request, res: Response) => {
+  try {
+    const creds = JSON.parse(process.env.GOOGLE_CREDS_JSON!);
+    const auth = new google.auth.GoogleAuth({
+      credentials: creds,
+      scopes: SCOPES,
+    });
+    const client = await auth.getClient();
+    const sheets = google.sheets({ version: 'v4', auth: client as JWT });
+    const sheetRes = await sheets.spreadsheets.values.get({
+      spreadsheetId: SHEET_ID,
+      range: RANGE,
+    });
+    const values = sheetRes.data.values || [];
+    const rows = values
+      .map(row => `<tr><td>${row[0]}</td><td>${row[1]}</td><td>${row[2]}</td><td>${row[3]}</td></tr>`)
+      .join('');
+    const html = `
+      <!DOCTYPE html>
+      <html>
+      <head>
+        <title>Standings</title>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1">
+        <style>
+          body { font-family: sans-serif; background: #111; color: white; padding: 2em; text-align: center; }
+          table { width: 90%; margin: auto; border-collapse: collapse; }
+          th, td { padding: 0.5em 1em; border-bottom: 1px solid #444; }
+          th { background: #222; }
+          tr:hover { background: #333; }
+        </style>
+      </head>
+      <body>
+        <h1>Live Standings</h1>
+        <table>
+          <thead><tr><th>Team</th><th>W</th><th>L</th><th>Pts</th></tr></thead>
+          <tbody>${rows}</tbody>
+        </table>
+      </body>
+      </html>
+    `;
+    res.send(html);
+  } catch (error) {
+    logger.error('[STANDINGS ERROR]', error);
+    res.status(500).send('Failed to load standings');
+  }
 });
 
 // Helper function to parse CSV data

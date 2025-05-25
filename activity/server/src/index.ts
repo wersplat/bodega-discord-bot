@@ -144,18 +144,18 @@ app.get('/sheet-data', async (c) => {
   try {
     const response = await fetch(sheetUrl);
     if (!response.ok) {
-      console.error(`Failed to fetch sheet: ${response.status} ${response.statusText}`);
-      return c.json({ error: 'Failed to fetch sheet data', upstreamStatus: response.status }, { status: response.status });
+      console.error(`Failed to fetch sheet: ${response.status} ${response.statusText} for GID ${gidToFetch}. URL: ${sheetUrl}`);
+      return c.json({ error: 'Failed to fetch sheet data from Google', upstreamStatus: response.status, details: response.statusText }, { status: response.status });
     }
     const csvData = await response.text();
     if (!csvData) {
-        console.error('Fetched CSV data is empty');
-        return c.json({ error: 'Fetched CSV data is empty'}, { status: 500 });
+        console.error(`Fetched CSV data is empty for GID ${gidToFetch}. URL: ${sheetUrl}`);
+        return c.json({ error: 'Fetched CSV data is empty from Google'}, { status: 500 });
     }
     const jsonData = csvToJSON(csvData);
     return c.json(jsonData);
   } catch (error: any) {
-    console.error(`Error fetching or parsing sheet data for GID ${gidToFetch}:`, error.message, error.stack);
+    console.error(`Error in /sheet-data handler for GID ${gidToFetch}. URL: ${sheetUrl}. Error:`, error.message, error.stack);
     return c.json({ error: 'Internal server error while processing sheet data', details: error.message }, { status: 500 });
   }
 });

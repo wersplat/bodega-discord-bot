@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import {
   DiscordSDK,
   Events as DiscordEvents,
@@ -6,6 +6,17 @@ import {
 } from "@discord/embedded-app-sdk";
 
 const discordSdk = new DiscordSDK(import.meta.env.VITE_CLIENT_ID);
+
+const sheetTabs = [
+  { name: "Road-to-25K-Teams", gid: "2116993983" },
+  { name: "Overall Standings", gid: "2002411778" },
+  { name: "D1", gid: "1182226510" },
+  { name: "D2", gid: "2033091792" },
+  { name: "D3", gid: "2000624894" },
+  { name: "Open", gid: "191822127" },
+];
+
+const DEFAULT_GID = sheetTabs[0].gid; // Default to Road-to-25K-Teams
 
 type SheetRow = Record<string, string>;
 
@@ -54,10 +65,48 @@ function App() {
   const [sheetData, setSheetData] = useState<SheetRow[] | null>(null);
   const [isLoadingSheetData, setIsLoadingSheetData] = useState<boolean>(false);
   const [sheetError, setSheetError] = useState<string | null>(null);
+  const [selectedGid, setSelectedGid] = useState<string>(DEFAULT_GID);
   const [participants, setParticipants] =
     useState<DiscordTypes.GetActivityInstanceConnectedParticipantsResponse | null>(
       null
     );
+
+  const fetchSheetData = useCallback(async (gid: string) => {
+    if (!auth) return; // Should not happen if called correctly, but good guard
+    setIsLoadingSheetData(true);
+    setSheetError(null);
+    try {
+      const response = await fetch(`/.proxy/sheet-data?gid=${gid}`);
+      if (!response.ok) {
+        const errorData = await response.json().catch(() => ({ error: 'Failed to parse error response from sheet data endpoint' }));
+        throw new Error(errorData.error || `Error fetching sheet data: ${response.status}`);
+      }
+      const data: SheetRow[] = await response.json();
+      setSheetData(data);
+    } catch (e: unknown) {
+      console.error(`Failed to fetch sheet data for GID ${gid}:`, e);
+      if (e instanceof Error) {
+        setSheetError(e.message);
+      } else {
+        setSheetError("An unknown error occurred while fetching sheet data.");
+      }
+    }
+    setIsLoadingSheetData(false);
+  }, [auth]);
+
+  useEffect(() => {
+    // This effect handles fetching sheet data when auth or selectedGid changes
+    async function loadSheetData() {
+      if (auth) {
+        setIsLoadingSheetData(true);
+        setSheetData(null); // Clear previous data
+        setSheetError(null);  // Clear previous error
+        await fetchSheetData(selectedGid);
+      }
+    }
+
+    loadSheetData();
+  }, [auth, selectedGid, fetchSheetData]);
 
   useEffect(() => {
     async function setupDiscordSDK() {
@@ -104,38 +153,11 @@ function App() {
       }
     }
 
-    async function fetchSheetData() {
-      if (!auth) return; // Should not happen if called correctly, but good guard
-      setIsLoadingSheetData(true);
-      setSheetError(null);
-      try {
-        const response = await fetch('/.proxy/api/sheet-data');
-        if (!response.ok) {
-          const errorData = await response.json().catch(() => ({ error: 'Failed to parse error response from sheet data endpoint' }));
-          throw new Error(errorData.error || `Error fetching sheet data: ${response.status}`);
-        }
-        const data: SheetRow[] = await response.json();
-        setSheetData(data);
-      } catch (e: unknown) {
-        console.error("Failed to fetch sheet data:", e);
-        if (e instanceof Error) {
-          setSheetError(e.message);
-        } else {
-          setSheetError("An unknown error occurred while fetching sheet data.");
-        }
-      }
-      setIsLoadingSheetData(false);
-    }
-
-    if (auth) {
-      // If authenticated, and we don't have data, and not loading, and no error, then fetch.
-      if (!sheetData && !isLoadingSheetData && !sheetError) {
-        fetchSheetData();
-      }
-    } else {
+    // This effect handles initial Discord SDK setup and authentication
+    if (!auth) {
       setupDiscordSDK();
     }
-  }, [auth, sheetData, isLoadingSheetData, sheetError]);
+  }, [auth]); // Only re-run when auth changes (e.g., from null to authenticated user)
 
   return (
     <main
@@ -170,6 +192,28 @@ function App() {
       {sheetData && sheetData.length > 0 && (
         <div style={{marginTop: '1rem'}}>
           <h3>Sheet Data</h3>
+          <div className="sheet-tabs-container" style={{ marginBottom: '10px', display: 'flex', flexWrap: 'wrap', gap: '10px' }}>
+            {sheetTabs.map((tab) => (
+              <button
+                key={tab.gid}
+                onClick={() => setSelectedGid(tab.gid)}
+                disabled={isLoadingSheetData || selectedGid === tab.gid}
+                style={{
+                  padding: '8px 12px',
+                  cursor: 'pointer',
+                  backgroundColor: selectedGid === tab.gid ? '#7289da' : '#4f545c',
+                  color: 'white',
+                  border: 'none',
+                  borderRadius: '3px',
+                  opacity: isLoadingSheetData && selectedGid !== tab.gid ? 0.5 : 1,
+                  fontSize: '14px',
+                  fontWeight: selectedGid === tab.gid ? 'bold' : 'normal',
+                }}
+              >
+                {tab.name}
+              </button>
+            ))}
+          </div>
           <button 
             onClick={() => window.open('https://docs.google.com/spreadsheets/d/1sOdG103h92LBv-FmoABPOd5jLROq0Smk23_-7IkQFYY/edit?usp=sharing', '_blank')}
             style={{

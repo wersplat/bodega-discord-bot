@@ -2,10 +2,10 @@
   "name": "bodega-discord-bot",
   "version": "1.0.0",
   "description": "Discord bot for Bodega Cats GC with Activity App integration",
-  "main": "dist/src/main.js",
+  "main": "dist/main.js",
   "scripts": {
     "build": "tsc",
-    "start": "node dist/src/main.js",
+    "start": "node dist/main.js",
     "dev": "ts-node-dev --respawn --transpile-only src/main.ts",
     "lint": "eslint . --ext .ts",
     "lint:fix": "eslint . --ext .ts --fix",

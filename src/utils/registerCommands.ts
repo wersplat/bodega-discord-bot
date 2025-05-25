@@ -13,10 +13,20 @@ export async function registerCommands() {
   for (const file of readdirSync(commandsDir).filter(f => f.endsWith(ext))) {
     // eslint-disable-next-line @typescript-eslint/no-var-requires
     const commandModule = require(join(commandsDir, file));
-    if (commandModule && commandModule.data) {
-      commands.push(commandModule.data.toJSON());
+    let commandData = null;
+
+    if (commandModule.default && commandModule.default.data) {
+      // Handle default export (e.g., export default { data: ..., execute: ... };)
+      commandData = commandModule.default.data;
+    } else if (commandModule.data) {
+      // Handle named export (e.g., export const data = ...;)
+      commandData = commandModule.data;
+    }
+
+    if (commandData) {
+      commands.push(commandData.toJSON());
     } else {
-      console.warn(`[WARNING] The command at ${join(commandsDir, file)} is missing a "data" export, or the module is empty.`);
+      console.warn(`[WARNING] The command at ${join(commandsDir, file)} is missing a usable "data" export.`);
     }
   }
 

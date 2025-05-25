@@ -1,0 +1,10 @@
+name = "discord-activity-server"
+compatibility_date = "2025-05-25"
+main = "src/index.ts" # Ensure main entry point is defined
+
+[site]
+bucket = "../client" # Serves the client's static files from the worker
+
+# [vars]
+# Variables like CLIENT_ID, CLIENT_SECRET, GOOGLE_SHEET_ID, GOOGLE_API_KEY
+# should be set as secrets in the Cloudflare dashboard or via 'wrangler secret put'.

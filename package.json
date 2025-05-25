@@ -27,6 +27,7 @@
     "google-auth-library": "^9.15.1",
     "googleapis": "^149.0.0",
     "node-fetch": "^2.7.0",
+    "robo.js": "^0.10.30",
     "winston": "^3.17.0"
   },
   "devDependencies": {

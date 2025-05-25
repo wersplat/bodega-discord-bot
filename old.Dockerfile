@@ -2,15 +2,10 @@ FROM node:20-alpine
 
 WORKDIR /app
 
-# Install dependencies
 COPY package*.json ./
 RUN npm ci
 
-# Copy source code and PM2 config
 COPY . .
-
-# Install PM2 globally
-RUN npm install -g pm2
 
 # Optional: install Doppler + Sentry CLI
 RUN wget -q -t3 'https://packages.doppler.com/public/cli/rsa.8004D9FF50437357.key' -O /etc/apk/keys/cli@doppler-8004D9FF50437357.rsa.pub \
@@ -18,13 +13,14 @@ RUN wget -q -t3 'https://packages.doppler.com/public/cli/rsa.8004D9FF50437357.ke
  && apk add --no-cache doppler \
  && npm install -g @sentry/cli
 
-# Build the project
-RUN npm run build
 
+# Use Doppler to     inject runtime secrets
 EXPOSE 3000
 
 # Healthcheck for Railway, Docker Compose, etc.
 HEALTHCHECK CMD wget --no-verbose --tries=1 --spider http://localhost:3000 || exit 1
 
-# Start both the bot and the activity server with PM2 and Doppler
-CMD ["doppler", "run", "--", "pm2-runtime", "ecosystem.config.js"]
+RUN npm run build
+
+# Default command
+CMD ["doppler", "run", "--", "node", "dist/main.js"]

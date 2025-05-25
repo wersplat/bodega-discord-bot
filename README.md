@@ -27,13 +27,15 @@ This single codebase powers all Discord bot features—roster lookups, announcem
 
 ---
 
-## 📊 Activity App & Google Sheets Standings
+## 📊 Integrated Activity App: Google Sheets Standings
 
-The Activity App is now integrated directly into the main bot server. It provides a `/standings` web route that displays live standings from a Google Sheet as an HTML table. This can be used as a Discord Activity or viewed in any browser.
+The Activity App is fully integrated into the main bot's Express server, eliminating the need for a separate service. It provides a `/standings` web route that displays live standings from a Google Sheet as an HTML table. This feature can be launched as a Discord Activity or viewed directly in any web browser.
 
-- **Route:** `/standings`
-- **Source:** Google Sheets (ID set via `GOOGLE_SHEET_ID` in your `.env`)
-- **Setup:** Ensure `GOOGLE_CREDS_JSON` and `GOOGLE_SHEET_ID` are set in your environment variables
+- **Access Route:** `/standings`
+- **Data Source:** Google Sheets (configured via `GOOGLE_SHEET_ID` in your `.env` file)
+- **Required Setup:** Ensure the following environment variables are correctly set in your `.env` file:
+    - `GOOGLE_SHEET_ID`: The ID of your Google Sheet.
+    - `GOOGLE_CREDS_JSON`: The JSON credentials for the Google API service account.
 
 ---
 
@@ -51,7 +53,7 @@ The Activity App is now integrated directly into the main bot server. It provide
 
    ```bash
    cp .env.example .env
-   # Edit .env with your values: DISCORD_TOKEN, CLIENT_ID, GUILD_ID, API_URL, etc.
+   # Edit .env with your values: DISCORD_TOKEN, CLIENT_ID, GUILD_ID, API_URL, GOOGLE_SHEET_ID, GOOGLE_CREDS_JSON, etc.
    ```
 
 3. **Local development**  
@@ -71,14 +73,14 @@ The Activity App is now integrated directly into the main bot server. It provide
 
 ```text
 bodega-discord-bot/
-├── activity/          # Activity App web assets (for /activity route)
+├── activity/          # Web assets (HTML, CSS, JS) for the /standings Activity App route
 ├── commands/          # Slash command handlers
 ├── docs/              # Documentation
 ├── scripts/           # One-off utilities (e.g. deploy-commands.ts)
 ├── utils/             # Shared helpers (API calls, scheduler)
 ├── .env.example       # Example environment variables
 ├── .gitignore
-├── main.ts            # Bootstraps bot, web server, and Activity App
+├── main.ts            # Main application entry point: bootstraps Discord bot, Express web server (including Activity App routes)
 ├── package.json
 ├── sentry.ts          # Sentry integration
 └── tsconfig.json

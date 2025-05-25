@@ -1,6 +1,10 @@
 # Discord Activity with Cloudflare
 
+---
+
 This is a simple Discord Activity application that uses Cloudflare Workers and Cloudflare Pages.
+
+---
 
 # Architecture
 

@@ -132,7 +132,7 @@ app.post("/token", async (c) => {
 });
 
 
-app.get('/api/sheet-data', async (c) => {
+app.get('/sheet-data', async (c) => {
   const sheetUrl = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vRV_Tz8yKtGZne961tId4A2Cdit7ZYGMJ8sinYHo_nX1SKj_VqAIi2haBbSd-UsUpVmkTFD-RDGezIt/pub?output=csv';
   try {
     const response = await fetch(sheetUrl);
@@ -143,13 +143,13 @@ app.get('/api/sheet-data', async (c) => {
     const csvData = await response.text();
     if (!csvData) {
         console.error('Fetched CSV data is empty');
-        return c.json({ error: 'Fetched CSV data is empty'}, 500);
+        return c.json({ error: 'Fetched CSV data is empty'}, { status: 500 });
     }
     const jsonData = csvToJSON(csvData);
     return c.json(jsonData);
   } catch (error: any) {
     console.error('Error fetching or parsing sheet data:', error.message, error.stack);
-    return c.json({ error: 'Internal server error while processing sheet data', details: error.message }, 500);
+    return c.json({ error: 'Internal server error while processing sheet data', details: error.message }, { status: 500 });
   }
 });
 

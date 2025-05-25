@@ -133,7 +133,14 @@ app.post("/token", async (c) => {
 
 
 app.get('/sheet-data', async (c) => {
-  const sheetUrl = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vRV_Tz8yKtGZne961tId4A2Cdit7ZYGMJ8sinYHo_nX1SKj_VqAIi2haBbSd-UsUpVmkTFD-RDGezIt/pub?output=csv';
+  const baseSheetUrl = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vRV_Tz8yKtGZne961tId4A2Cdit7ZYGMJ8sinYHo_nX1SKj_VqAIi2haBbSd-UsUpVmkTFD-RDGezIt/pub';
+  const requestedGid = c.req.query('gid');
+  const defaultGid = '2116993983'; // Default to "Road-to-25K-Teams"
+  const gidToFetch = requestedGid || defaultGid;
+
+  const sheetUrl = `${baseSheetUrl}?gid=${gidToFetch}&single=true&output=csv`;
+  console.log(`Fetching sheet data from: ${sheetUrl}`); // Added for debugging
+
   try {
     const response = await fetch(sheetUrl);
     if (!response.ok) {
@@ -148,7 +155,7 @@ app.get('/sheet-data', async (c) => {
     const jsonData = csvToJSON(csvData);
     return c.json(jsonData);
   } catch (error: any) {
-    console.error('Error fetching or parsing sheet data:', error.message, error.stack);
+    console.error(`Error fetching or parsing sheet data for GID ${gidToFetch}:`, error.message, error.stack);
     return c.json({ error: 'Internal server error while processing sheet data', details: error.message }, { status: 500 });
   }
 });

@@ -117,4 +117,4 @@ npm run register
 - Commands are located in the `commands/` directory.
 - Environment variables are documented in `.env.example`.
 - For deployment, ensure all required environment variables are set.
-
+---

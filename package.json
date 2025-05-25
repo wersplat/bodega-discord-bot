@@ -1,17 +1,38 @@
 {
-  "name": "discord_bot",
-  "version": "0.1.0",
-  "main": "dist/main.js",
+  "name": "bodega-discord-bot",
+  "version": "1.0.0",
+  "description": "Discord bot for Bodega Cats GC with Activity App integration",
+  "main": "dist/src/main.js",
   "scripts": {
-    "build": "tsc && npm run copy-activity",
-    "copy-activity": "cpx \"activity/**/*.*\" dist/activity",
-    "start": "node dist/main.js",
-    "dev": "ts-node-dev main.ts",
+    "build": "tsc",
+    "start": "node dist/src/main.js",
+    "dev": "ts-node-dev --respawn --transpile-only src/main.ts",
     "lint": "eslint . --ext .ts",
-    "format": "prettier --write .",
-    "register": "ts-node scripts/deploy-commands.ts",
-    "serve:activity": "node dist/main.js"
+    "lint:fix": "eslint . --ext .ts --fix",
+    "format": "prettier --write \"src/**/*.ts\" \"public/**/*.{html,css,js}\"",
+    "register": "ts-node src/scripts/deploy-commands.ts",
+    "test": "jest",
+    "prepare": "husky install"
   },
+  "engines": {
+    "node": ">=16.0.0"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/yourusername/bodega-discord-bot.git"
+  },
+  "keywords": [
+    "discord",
+    "bot",
+    "bodega-cats",
+    "activity-app"
+  ],
+  "author": "Your Name",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/yourusername/bodega-discord-bot/issues"
+  },
+  "homepage": "https://github.com/yourusername/bodega-discord-bot#readme",
   "dependencies": {
     "@discord/embedded-app-sdk": "^2.0.0",
     "@sentry/integrations": "^7.114.0",
@@ -30,6 +51,7 @@
     "winston": "^3.17.0"
   },
   "devDependencies": {
+    "@types/jest": "^29.5.12",
     "@types/node": "^18.19.100",
     "@types/node-fetch": "^2.6.12",
     "@typescript-eslint/eslint-plugin": "^8.31.1",
@@ -38,12 +60,12 @@
     "eslint": "^9.25.1",
     "eslint-config-prettier": "^10.1.2",
     "eslint-plugin-prettier": "^5.2.6",
+    "husky": "^9.0.11",
+    "jest": "^29.7.0",
     "prettier": "^3.5.3",
+    "ts-jest": "^29.1.2",
+    "ts-node": "^10.9.2",
     "ts-node-dev": "^2.0.0",
     "typescript": "^5.8.3"
-  },
-  "keywords": [],
-  "author": "",
-  "license": "ISC",
-  "description": ""
+  }
 }

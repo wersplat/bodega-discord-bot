@@ -1,0 +1,29 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Bodega Standings</title>
+  <link rel="stylesheet" href="styles.css">
+  <!-- Environment variables will be injected by the server -->
+</head>
+<body>
+  <div class="container">
+    <div class="header">
+      <h1>Bodega Standings</h1>
+      <div class="actions">
+        <button id="refreshData" class="btn btn-small">↻ Refresh</button>
+        <button id="openSheet" class="btn btn-small">Open in Browser</button>
+      </div>
+    </div>
+    
+    <div id="loading" class="loading">Loading standings...</div>
+    <div id="error" class="error" style="display: none;"></div>
+    
+    <!-- Content will be injected here by client.js -->
+    <div id="content" class="content-container"></div>
+  </div>
+  
+  <script src="client.js"></script>
+</body>
+</html>

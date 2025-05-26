@@ -16,7 +16,7 @@ const sheetTabs = [
   { name: "Open", sheetName: "Open" },
 ];
 
-const DEFAULT_SHEET_NAME = sheetTabs[0].sheetName; // Default to Road-to-25K-Teams
+const DEFAULT_SHEET_NAME = "Open"; // Default to Open sheet
 
 type SheetRow = Record<string, string>;
 

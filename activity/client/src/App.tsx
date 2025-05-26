@@ -77,9 +77,16 @@ function App() {
     setSheetError(null);
     try {
       const response = await fetch(`/.proxy/api/sheet-data/${gid}`);
-      if (!response.ok) {
-        const errorData = await response.json().catch(() => ({ error: 'Failed to parse error response from sheet data endpoint' }));
-        throw new Error(errorData.error || `Error fetching sheet data: ${response.status}`);
+      if (!response.ok) { // If worker returns an error (e.g., 403, 404, 500 from Sheets API)
+        let errorDetails = `Error fetching sheet data: ${response.status}`;
+        try {
+            const errorData = await response.json(); // Worker's error responses should be JSON
+            errorDetails = errorData.details || errorData.error || errorDetails; // Prefer 'details' if available
+        } catch (_unusedParseError) {
+            // If parsing the error response as JSON fails, stick with the status code
+            console.error("Failed to parse error response from worker as JSON, status:", response.status);
+        }
+        throw new Error(errorDetails);
       }
       const data: SheetRow[] = await response.json();
       setSheetData(data);

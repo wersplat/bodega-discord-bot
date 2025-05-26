@@ -1,137 +1,100 @@
 import { Hono } from "hono";
-import { google } from 'googleapis';
+import { google, sheets_v4 } from 'googleapis'; // Import sheets_v4 for type hints
 
 type Bindings = {
   DISCORD_CLIENT_ID: string;
   DISCORD_CLIENT_SECRET: string;
-  GOOGLE_SHEET_ID: string; // For Google Sheets integration
-  GOOGLE_API_KEY: string;  // For Google Sheets integration
+  GOOGLE_SHEET_ID: string; 
+  GOOGLE_API_KEY: string;  
+  // SERVICE_ACCOUNT_JSON: string; // Add if using service account
 };
 
 const app = new Hono<{ Bindings: Bindings }>();
 
-// GID to Sheet Name Mapping
-const GID_TO_SHEET_NAME_MAP: Record<string, string> = {
-  '2116993983': 'Road-to-25K-Teams',
-  '2002411778': 'Overall Standings',
-  '1182226510': 'D1',
-  '2033091792': 'D2',
-  '2000624894': 'D3',
-  '191822127': 'Open',
-};
-const DEFAULT_SHEET_NAME = GID_TO_SHEET_NAME_MAP['2116993983']; // Road-to-25K-Teams as default
-
-// Helper function to convert Google Sheets API values (array of arrays) to an array of objects
-function convertSheetValuesToObjects(values: any[][]): Record<string, any>[] {
-  if (!values || values.length === 0) {
+// Helper function to convert data from sheets.spreadsheets.get() to array of objects
+function convertSpreadsheetGetDataToObjects(sheetData: sheets_v4.Schema$Spreadsheet): Record<string, any>[] {
+  // Check if the necessary data path exists
+  if (!sheetData || !sheetData.sheets || sheetData.sheets.length === 0 || 
+      !sheetData.sheets[0].data || sheetData.sheets[0].data.length === 0 || 
+      !sheetData.sheets[0].data[0].rowData) {
+    console.warn("[WORKER convertSpreadsheetGetDataToObjects] No rowData found or unexpected structure from spreadsheets.get API.");
     return [];
   }
-  const headers = values[0].map(String); // First row as headers
-  const dataRows = values.slice(1);
 
-  return dataRows.map(row => {
-    const obj: Record<string, any> = {};
-    headers.forEach((header, index) => {
-      obj[header] = row[index] !== undefined ? row[index] : '';
-    });
-    return obj;
-  });
-}
-
-// Original csvToJSON function (no longer primary for sheet data but kept if used elsewhere or for reference)
-function csvToJSON(csv: string): Array<Record<string, string>> {
-  const lines = csv.trim().split('\n');
-  if (lines.length === 0) {
-    return [];
+  const rowDataArray = sheetData.sheets[0].data[0].rowData;
+  if (!rowDataArray || rowDataArray.length === 0) {
+    console.warn("[WORKER convertSpreadsheetGetDataToObjects] rowDataArray is empty.");
+    return []; 
   }
-  // Robust header splitting: handles headers with commas if they are quoted
-  const headersLine = lines[0];
-  const headers: string[] = [];
-  let currentHeader = '';
-  let inHeaderQuotes = false;
-  for (const char of headersLine) {
-    if (char === '"') {
-      inHeaderQuotes = !inHeaderQuotes;
-    } else if (char === ',' && !inHeaderQuotes) {
-      headers.push(currentHeader.trim().replace(/^"|"$/g, ''));
-      currentHeader = '';
-    } else {
-      currentHeader += char;
+
+  let headerCells: string[] = [];
+  let dataRowStartIndex = 0;
+
+  // Find the first row with actual values to use as headers
+  for (let i = 0; i < rowDataArray.length; i++) {
+    const currentRow = rowDataArray[i];
+    if (currentRow && currentRow.values && currentRow.values.length > 0) {
+      headerCells = currentRow.values.map((cell: sheets_v4.Schema$CellData) => 
+        cell && cell.formattedValue !== null && cell.formattedValue !== undefined ? String(cell.formattedValue) : ''
+      );
+      dataRowStartIndex = i + 1;
+      break; 
     }
   }
-  headers.push(currentHeader.trim().replace(/^"|"$/g, '')); // Add the last header
 
-  const result: Array<Record<string, string>> = [];
-  for (let i = 1; i < lines.length; i++) {
-    const obj: { [key: string]: string } = {};
-    const currentLineChars = lines[i].split('');
-    const processedLineValues: string[] = [];
-    let currentValue = '';
-    let inValueQuotes = false;
+  if (headerCells.length === 0) {
+    console.warn("[WORKER convertSpreadsheetGetDataToObjects] No headers found in the fetched data.");
+    return [];
+  }
 
-    for (let charIndex = 0; charIndex < currentLineChars.length; charIndex++) {
-      const char = currentLineChars[charIndex];
-      if (char === '"') {
-        // Handle escaped quotes: if the next char is also a quote, it's an escaped quote
-        if (inValueQuotes && charIndex + 1 < currentLineChars.length && currentLineChars[charIndex + 1] === '"') {
-          currentValue += '"'; // Add one quote to the value
-          charIndex++; // Skip the next quote
-          continue;
+  const objects: Record<string, any>[] = [];
+  for (let i = dataRowStartIndex; i < rowDataArray.length; i++) {
+    const row = rowDataArray[i];
+    if (row && row.values && row.values.length > 0) {
+      const obj: Record<string, any> = {};
+      let hasDataInRow = false;
+      for (let j = 0; j < headerCells.length; j++) {
+        const header = headerCells[j];
+        const cellValue = (row.values[j] && row.values[j].formattedValue !== null && row.values[j].formattedValue !== undefined) 
+                          ? String(row.values[j].formattedValue) 
+                          : '';
+        obj[header] = cellValue;
+        if (cellValue.trim() !== '') {
+          hasDataInRow = true;
         }
-        inValueQuotes = !inValueQuotes;
-      } else if (char === ',' && !inValueQuotes) {
-        processedLineValues.push(currentValue.trim());
-        currentValue = '';
-      } else {
-        currentValue += char;
+      }
+      // Only add the object if it has at least one non-empty value for the mapped headers
+      // and the corresponding header is not empty
+      if (hasDataInRow && headerCells.some(h => h.trim() !== '')) {
+        objects.push(obj);
       }
     }
-    processedLineValues.push(currentValue.trim()); // Add the last value
-
-    for (let j = 0; j < headers.length; j++) {
-      obj[headers[j]] = processedLineValues[j] !== undefined ? processedLineValues[j] : '';
-    }
-    result.push(obj);
   }
-  return result;
+  return objects;
 }
 
 app.get("/", (c) => {
-  return c.text("Hello Hono!!");
+  return c.text("Hello from Bodega Discord Activity Server!");
 });
 
 app.get("/api/config", (c) => {
   return c.json({
     clientId: c.env.DISCORD_CLIENT_ID
-    // googleSheetId: c.env.GOOGLE_SHEET_ID, // Intentionally commented out for now
-    // googleApiKey: c.env.GOOGLE_API_KEY,    // Intentionally commented out for now
   });
 });
 
 app.post("/token", async (c) => {
   const code = await c.req
     .json()
-    .then(({ code }) => {
-      return code;
-    })
-    .catch(() => {
-      return undefined;
-    });
+    .then(({ code }) => code as string | undefined)
+    .catch(() => undefined);
 
-  if (code === undefined) {
-    return c.json({ error: "Code is undefined" });
+  if (!code) {
+    return c.json({ error: "Code is missing or invalid" }, { status: 400 });
   }
 
-  if (code === null) {
-    return c.json({ error: "Code is null" });
-  }
-
-  if (typeof code !== "string") {
-    return c.json({ error: "Code is not a string" });
-  }
-
-  const { access_token, error } = await fetch(
-    `https://discord.com/api/oauth2/token`,
+  const response = await fetch(
+    "https://discord.com/api/oauth2/token",
     {
       method: "POST",
       headers: {
@@ -144,79 +107,91 @@ app.post("/token", async (c) => {
         code,
       }),
     }
-  ).then(async (response) => {
-    if (!response.ok) {
-      console.error({
-        status: response.status,
-        details: response.statusText,
-        code,
-      });
-      return { access_token: "", error: "Failed to get access token" };
-    }
+  );
 
-    return response.json() as Promise<{ access_token: string; error: string }>;
-  });
+  if (!response.ok) {
+    const errorBody = await response.text(); 
+    console.error("Token exchange failed:", {
+      status: response.status,
+      statusText: response.statusText,
+      body: errorBody,
+      codeUsed: code
+    });
+    return c.json({ error: "Failed to exchange code for token.", details: errorBody }, { status: response.status });
+  }
 
-  return c.json({ access_token, error });
+  const tokenData = await response.json() as { access_token?: string; error?: string }; 
+  return c.json(tokenData);
 });
 
-
-app.get('/api/sheet-data/:gid?', async (c) => {
+app.get('/api/sheet-data/:sheetName', async (c) => {
   const SPREADSHEET_ID = c.env.GOOGLE_SHEET_ID;
-  const API_KEY = c.env.GOOGLE_API_KEY;
+  const API_KEY = c.env.GOOGLE_API_KEY; 
+  // const SERVICE_ACCOUNT_JSON_STRING = c.env.SERVICE_ACCOUNT_JSON;
 
-  if (!SPREADSHEET_ID || !API_KEY) {
-    console.error("[WORKER /api/sheet-data] Missing SPREADSHEET_ID or GOOGLE_API_KEY in environment variables.");
-    return c.json({ error: 'Server configuration error: Missing Google Sheets credentials.' }, { status: 500 });
+  if (!SPREADSHEET_ID) {
+    console.error("[WORKER /api/sheet-data] Missing SPREADSHEET_ID environment variable.");
+    return c.json({ error: 'Server configuration error: Missing Google Sheet ID.' }, { status: 500 });
+  }
+  // TODO: Prioritize Service Account if SERVICE_ACCOUNT_JSON_STRING is present
+  if (!API_KEY) { 
+    console.error("[WORKER /api/sheet-data] Missing GOOGLE_API_KEY environment variable.");
+    return c.json({ error: 'Server configuration error: Missing Google API Key.' }, { status: 500 });
   }
 
-  const requestedGid = c.req.param('gid');
-  const sheetNameToFetch = (requestedGid && GID_TO_SHEET_NAME_MAP[requestedGid]) ? GID_TO_SHEET_NAME_MAP[requestedGid] : DEFAULT_SHEET_NAME;
+  const sheetNameFromParam = c.req.param('sheetName');
+  const rangeQuery = c.req.query('range');
+  // If range is provided, use it. Otherwise, just use sheet name to get all cells.
+  const effectiveRange = rangeQuery ? `${sheetNameFromParam}!${rangeQuery}` : sheetNameFromParam;
 
-  console.log(`[WORKER /api/sheet-data/:gid?] Param GID: "${requestedGid}", Fetching Sheet Name: "${sheetNameToFetch}"`);
-
-  if (!sheetNameToFetch) {
-      console.error(`[WORKER /api/sheet-data] No sheet name found for GID: ${requestedGid}, and no default sheet name configured properly.`);
-      return c.json({ error: `Sheet not found for the provided identifier.` }, { status: 404 });
+  if (!sheetNameFromParam) {
+    console.error("[WORKER /api/sheet-data] Sheet name not provided in URL parameter.");
+    return c.json({ error: 'Sheet name must be provided.' }, { status: 400 });
   }
+
+  console.log(`[WORKER /api/sheet-data] Attempting to fetch sheet: '${sheetNameFromParam}', effective range: '${effectiveRange}' from SPREADSHEET_ID: '${SPREADSHEET_ID}'`);
 
   try {
     const sheets = google.sheets({ version: 'v4', auth: API_KEY });
-    const response = await sheets.spreadsheets.values.get({
+    
+    const response = await sheets.spreadsheets.get({
       spreadsheetId: SPREADSHEET_ID,
-      range: sheetNameToFetch, // Use the sheet name for the range
+      ranges: [effectiveRange],
+      includeGridData: true, 
     });
 
-    if (!response.data.values) {
-      console.log(`[WORKER /api/sheet-data] No data found in sheet: ${sheetNameToFetch}`);
-      return c.json([]); // Return empty array if sheet has no data or no values
+    if (!response.data || !response.data.sheets || response.data.sheets.length === 0) {
+      console.warn(`[WORKER /api/sheet-data] No sheets data returned for range '${effectiveRange}'. The sheet might be empty, name/range incorrect, or not found.`);
+      return c.json([]);
     }
 
-    const jsonData = convertSheetValuesToObjects(response.data.values);
-    console.log(`[WORKER /api/sheet-data] Successfully fetched and processed data from sheet: ${sheetNameToFetch}. Rows: ${jsonData.length}`);
-    return c.json(jsonData);
+    const objects = convertSpreadsheetGetDataToObjects(response.data);
+    return c.json(objects);
 
   } catch (e: any) {
-    console.error(`[WORKER /api/sheet-data] Error fetching from Google Sheets API for sheet "${sheetNameToFetch}": ${e.message}`, e.response?.data || e);
+    let errorMessage = 'Failed to fetch sheet data from Google Sheets API.';
+    let errorDetails = e.message || 'Unknown error';
+    let statusCode = 500;
+
     if (e.response && e.response.data && e.response.data.error) {
-      const apiError = e.response.data.error;
-      return c.json({ 
-          error: 'Google Sheets API Error', 
-          details: apiError.message || 'Failed to retrieve data.',
-          googleApiStatus: apiError.code,
-      }, { status: apiError.code === 403 ? 403 : apiError.code === 404 ? 404 : 500 });
+      const googleError = e.response.data.error;
+      console.error(`[WORKER /api/sheet-data] Google API Error for range '${effectiveRange}': ${googleError.code} ${googleError.message}`, googleError.details);
+      errorDetails = `${googleError.message} (Code: ${googleError.code})`;
+      if (googleError.code === 403) {
+        errorMessage = 'Permission denied. Ensure API key is valid and sheet has correct sharing settings (e.g., public or shared with API key user/service account).';
+        statusCode = 403;
+      } else if (googleError.code === 400 && googleError.message && googleError.message.includes('Unable to parse range')) {
+        errorMessage = `Invalid sheet name or range format: '${effectiveRange}'. Check sheet name and A1 notation.`;
+        statusCode = 400;
+      } else if (googleError.code === 404) {
+        errorMessage = `Spreadsheet not found (ID: ${SPREADSHEET_ID}) or sheet/range '${effectiveRange}' does not exist.`;
+        statusCode = 404;
+      }
+    } else {
+      console.error(`[WORKER /api/sheet-data] Error fetching from Google Sheets API for range '${effectiveRange}': ${errorDetails}`, e.config || e);
     }
-    return c.json({ error: 'Internal server error while fetching sheet data via API', details: e.message }, { status: 500 });
+    return c.json({ error: errorMessage, details: errorDetails }, { status: statusCode });
   }
 });
-
-// The old CSV fetching logic is replaced by the Google Sheets API logic above.
-// We can remove the old app.get('/api/sheet-data/:gid?', ...) implementation or comment it out.
-// For this replacement, we assume the entire old block from the previous `app.get('/api/sheet-data/:gid?'`
-// down to its closing `});` is being replaced by the new implementation above.
-// To ensure this, the TargetContent for the next chunk will be the start of the old logic
-// and ReplacementContent will be empty, effectively deleting the old block if the new one is placed correctly.
-
-
 
 export default app;

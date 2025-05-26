@@ -133,13 +133,15 @@ app.post("/token", async (c) => {
 
 
 app.get('/api/sheet-data', async (c) => {
+  // Enhanced console log
+  console.log(`[WORKER /api/sheet-data] Path: ${c.req.path}, Method: ${c.req.method}, Requested GID: "${c.req.query('gid')}", GID to fetch: "${c.req.query('gid') || '2116993983'}", Origin: ${c.req.header('Origin')}, Referer: ${c.req.header('Referer')}`);
   const baseSheetUrl = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vRV_Tz8yKtGZne961tId4A2Cdit7ZYGMJ8sinYHo_nX1SKj_VqAIi2haBbSd-UsUpVmkTFD-RDGezIt/pub';
   const requestedGid = c.req.query('gid');
   const defaultGid = '2116993983'; // Default to "Road-to-25K-Teams"
   const gidToFetch = requestedGid || defaultGid;
 
   const sheetUrl = `${baseSheetUrl}?gid=${gidToFetch}&single=true&output=csv`;
-  console.log(`Fetching sheet data from: ${sheetUrl}`); // Added for debugging
+  console.log(`[WORKER /api/sheet-data] Fetching sheet data from: ${sheetUrl}`);
 
   try {
     const response = await fetch(sheetUrl);
@@ -147,16 +149,13 @@ app.get('/api/sheet-data', async (c) => {
       console.error(`Failed to fetch sheet: ${response.status} ${response.statusText} for GID ${gidToFetch}. URL: ${sheetUrl}`);
       return c.json({ error: 'Failed to fetch sheet data from Google', upstreamStatus: response.status, details: response.statusText }, { status: response.status });
     }
-    const csvData = await response.text();
-    if (!csvData) {
-        console.error(`Fetched CSV data is empty for GID ${gidToFetch}. URL: ${sheetUrl}`);
-        return c.json({ error: 'Fetched CSV data is empty from Google'}, { status: 500 });
-    }
-    const jsonData = csvToJSON(csvData);
-    return c.json(jsonData);
-  } catch (error: any) {
-    console.error(`Error in /sheet-data handler for GID ${gidToFetch}. URL: ${sheetUrl}. Error:`, error.message, error.stack);
-    return c.json({ error: 'Internal server error while processing sheet data', details: error.message }, { status: 500 });
+    const csvText = await response.text();
+    console.log(`[WORKER /api/sheet-data] Successfully fetched CSV for GID ${gidToFetch}. Length: ${csvText.length}`);
+    c.header('Content-Type', 'text/plain; charset=UTF-8'); // Or 'text/csv'
+    return c.text(csvText);
+  } catch (e: any) {
+    console.error(`[WORKER /api/sheet-data] Error in fetch logic for GID ${gidToFetch}: ${e.message}`, e);
+    return c.json({ error: 'Internal server error', details: e.message }, { status: 500 });
   }
 });
 

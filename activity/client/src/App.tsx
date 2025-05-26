@@ -76,7 +76,7 @@ function App() {
     setIsLoadingSheetData(true);
     setSheetError(null);
     try {
-      const response = await fetch(`/.proxy/api/sheet-data?gid=${gid}`);
+      const response = await fetch(`/.proxy/api/sheet-data/${gid}`);
       if (!response.ok) {
         const errorData = await response.json().catch(() => ({ error: 'Failed to parse error response from sheet data endpoint' }));
         throw new Error(errorData.error || `Error fetching sheet data: ${response.status}`);

@@ -132,11 +132,11 @@ app.post("/token", async (c) => {
 });
 
 
-app.get('/api/sheet-data', async (c) => {
+app.get('/api/sheet-data/:gid?', async (c) => {
   // Enhanced console log
-  console.log(`[WORKER /api/sheet-data] Path: ${c.req.path}, Method: ${c.req.method}, Requested GID: "${c.req.query('gid')}", GID to fetch: "${c.req.query('gid') || '2116993983'}", Origin: ${c.req.header('Origin')}, Referer: ${c.req.header('Referer')}`);
+  console.log(`[WORKER /api/sheet-data/:gid?] Path: ${c.req.path}, Method: ${c.req.method}, Param GID: "${c.req.param('gid')}", GID to fetch: "${c.req.param('gid') || '2116993983'}", Origin: ${c.req.header('Origin')}, Referer: ${c.req.header('Referer')}`);
   const baseSheetUrl = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vRV_Tz8yKtGZne961tId4A2Cdit7ZYGMJ8sinYHo_nX1SKj_VqAIi2haBbSd-UsUpVmkTFD-RDGezIt/pub';
-  const requestedGid = c.req.query('gid');
+  const requestedGid = c.req.param('gid');
   const defaultGid = '2116993983'; // Default to "Road-to-25K-Teams"
   const gidToFetch = requestedGid || defaultGid;
 

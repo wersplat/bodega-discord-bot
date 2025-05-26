@@ -1,8 +1,7 @@
 name = "discord-activity-server"
 compatibility_date = "2025-05-26"
-main = "src/index.ts"
-compatibility_date = "2024-03-20" # Or your desired date
-compatibility_flags = ["nodejs_compat"] # Ensure main entry point is defined
+main = "src/index.ts" # Ensure main entry point is defined
+compatibility_flags = ["nodejs_compat"]
 
 [site]
 bucket = "../client" # Serves the client's static files from the worker

@@ -8,15 +8,15 @@ import {
 const discordSdk = new DiscordSDK(import.meta.env.VITE_CLIENT_ID);
 
 const sheetTabs = [
-  { name: "Road-to-25K-Teams", gid: "2116993983" },
-  { name: "Overall Standings", gid: "2002411778" },
-  { name: "D1", gid: "1182226510" },
-  { name: "D2", gid: "2033091792" },
-  { name: "D3", gid: "2000624894" },
-  { name: "Open", gid: "191822127" },
+  { name: "Road-to-25K-Teams", sheetName: "Road-to-25K-Teams" },
+  { name: "Overall Standings", sheetName: "Overall Standings" },
+  { name: "D1", sheetName: "D1" },
+  { name: "D2", sheetName: "D2" },
+  { name: "D3", sheetName: "D3" },
+  { name: "Open", sheetName: "Open" },
 ];
 
-const DEFAULT_GID = sheetTabs[0].gid; // Default to Road-to-25K-Teams
+const DEFAULT_SHEET_NAME = sheetTabs[0].sheetName; // Default to Road-to-25K-Teams
 
 type SheetRow = Record<string, string>;
 
@@ -65,24 +65,24 @@ function App() {
   const [sheetData, setSheetData] = useState<SheetRow[] | null>(null);
   const [isLoadingSheetData, setIsLoadingSheetData] = useState<boolean>(false);
   const [sheetError, setSheetError] = useState<string | null>(null);
-  const [selectedGid, setSelectedGid] = useState<string>(DEFAULT_GID);
+  const [selectedSheetName, setSelectedSheetName] = useState<string>(DEFAULT_SHEET_NAME);
   const [participants, setParticipants] =
     useState<DiscordTypes.GetActivityInstanceConnectedParticipantsResponse | null>(
       null
     );
 
-  const fetchSheetData = useCallback(async (gid: string) => {
+  const fetchSheetData = useCallback(async (sheetName: string) => {
     if (!auth) return; // Should not happen if called correctly, but good guard
     setIsLoadingSheetData(true);
     setSheetError(null);
     try {
-      const response = await fetch(`/.proxy/api/sheet-data/${gid}`);
+      const response = await fetch(`/.proxy/api/sheet-data/${sheetName}`);
       if (!response.ok) { // If worker returns an error (e.g., 403, 404, 500 from Sheets API)
         let errorDetails = `Error fetching sheet data: ${response.status}`;
         try {
             const errorData = await response.json(); // Worker's error responses should be JSON
             errorDetails = errorData.details || errorData.error || errorDetails; // Prefer 'details' if available
-        } catch (_unusedParseError) {
+        } catch {
             // If parsing the error response as JSON fails, stick with the status code
             console.error("Failed to parse error response from worker as JSON, status:", response.status);
         }
@@ -91,7 +91,7 @@ function App() {
       const data: SheetRow[] = await response.json();
       setSheetData(data);
     } catch (e: unknown) {
-      console.error(`Failed to fetch sheet data for GID ${gid}:`, e);
+      console.error(`Failed to fetch sheet data for sheet ${sheetName}:`, e);
       if (e instanceof Error) {
         setSheetError(e.message);
       } else {
@@ -102,18 +102,18 @@ function App() {
   }, [auth]);
 
   useEffect(() => {
-    // This effect handles fetching sheet data when auth or selectedGid changes
+    // This effect handles fetching sheet data when auth or selectedSheetName changes
     async function loadSheetData() {
-      if (auth) {
+      if (auth && selectedSheetName) { // Ensure selectedSheetName is also available
         setIsLoadingSheetData(true);
         setSheetData(null); // Clear previous data
         setSheetError(null);  // Clear previous error
-        await fetchSheetData(selectedGid);
+        await fetchSheetData(selectedSheetName);
       }
     }
 
     loadSheetData();
-  }, [auth, selectedGid, fetchSheetData]);
+  }, [auth, selectedSheetName, fetchSheetData]);
 
   useEffect(() => {
     async function setupDiscordSDK() {
@@ -202,19 +202,19 @@ function App() {
           <div className="sheet-tabs-container" style={{ marginBottom: '10px', display: 'flex', flexWrap: 'wrap', gap: '10px' }}>
             {sheetTabs.map((tab) => (
               <button
-                key={tab.gid}
-                onClick={() => setSelectedGid(tab.gid)}
-                disabled={isLoadingSheetData || selectedGid === tab.gid}
+                key={tab.sheetName} // Use sheetName for key
+                onClick={() => setSelectedSheetName(tab.sheetName)} // Use sheetName
+                disabled={isLoadingSheetData || selectedSheetName === tab.sheetName} // Use sheetName
                 style={{
                   padding: '8px 12px',
                   cursor: 'pointer',
-                  backgroundColor: selectedGid === tab.gid ? '#7289da' : '#4f545c',
+                  backgroundColor: selectedSheetName === tab.sheetName ? '#7289da' : '#4f545c', // Use sheetName
                   color: 'white',
                   border: 'none',
                   borderRadius: '3px',
-                  opacity: isLoadingSheetData && selectedGid !== tab.gid ? 0.5 : 1,
+                  opacity: isLoadingSheetData && selectedSheetName !== tab.sheetName ? 0.5 : 1, // Use sheetName
                   fontSize: '14px',
-                  fontWeight: selectedGid === tab.gid ? 'bold' : 'normal',
+                  fontWeight: selectedSheetName === tab.sheetName ? 'bold' : 'normal', // Use sheetName
                 }}
               >
                 {tab.name}

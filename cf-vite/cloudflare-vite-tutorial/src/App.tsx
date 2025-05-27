@@ -341,5 +341,4 @@ function App() { // Renamed from ActivityApp to App
     </main>
   );
 }
-
 export default App;

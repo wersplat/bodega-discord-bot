@@ -138,8 +138,8 @@ app.post("/token", async (c) => {
 });
 
 app.get('/api/sheet-data/:sheetName', async (c) => {
-  const SPREADSHEET_ID = process.env.GOOGLE_SHEET_ID;
-  const API_KEY = process.env.GOOGLE_API_KEY; 
+  const SPREADSHEET_ID = c.env.GOOGLE_SHEET_ID;
+  const API_KEY = c.env.GOOGLE_API_KEY; 
   // const SERVICE_ACCOUNT_JSON_STRING = c.env.SERVICE_ACCOUNT_JSON;
 
   if (!SPREADSHEET_ID) {

@@ -19,5 +19,5 @@ GOOGLE_SHEET_ID = "your_google_sheet_id_placeholder"
 GOOGLE_API_KEY = "your_google_api_key_placeholder"
 
 # wrangler.toml (wrangler v3.88.0^)
-observability.logs
+[observability.logs]
 enabled = true

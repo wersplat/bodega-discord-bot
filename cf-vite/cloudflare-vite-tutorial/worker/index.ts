@@ -1,7 +1,17 @@
+import dotenv from 'dotenv';
+dotenv.config();
 import { Hono } from 'hono';
 import type { ContentfulStatusCode } from 'hono/utils/http-status';
-import { google, sheets_v4 } from 'googleapis'; // Import sheets_v4 for type hints
+import { google, sheets_v4  as sheets_v4 } from 'googleapis'; // Import sheets_v4 for type hints
 // import { google } from 'googleapis'; // For Google Sheets API (Temporarily commented out for payload size debugging)
+
+// Interface for the structured error object from Google APIs
+interface GoogleApiErrorFields {
+  code: number;
+  message: string;
+  details?: unknown[]; // Adjust if the structure of details is known and consistent
+  status?: string; // Often included as well
+}
 
 type Bindings = {
   DISCORD_CLIENT_ID: string;
@@ -128,8 +138,8 @@ app.post("/token", async (c) => {
 });
 
 app.get('/api/sheet-data/:sheetName', async (c) => {
-  const SPREADSHEET_ID = c.env.GOOGLE_SHEET_ID;
-  const API_KEY = c.env.GOOGLE_API_KEY; 
+  const SPREADSHEET_ID = process.env.GOOGLE_SHEET_ID;
+  const API_KEY = process.env.GOOGLE_API_KEY; 
   // const SERVICE_ACCOUNT_JSON_STRING = c.env.SERVICE_ACCOUNT_JSON;
 
   if (!SPREADSHEET_ID) {
@@ -177,7 +187,7 @@ app.get('/api/sheet-data/:sheetName', async (c) => {
     let statusCode = 500;
 
     if (e && typeof e === 'object' && e !== null && 'response' in e && e.response && typeof e.response === 'object' && e.response !== null && 'data' in e.response && e.response.data && typeof e.response.data === 'object' && e.response.data !== null && 'error' in e.response.data) {
-      const googleError = (e.response.data as any).error; // Assuming googleError has a predictable structure
+      const googleError = e.response.data.error as GoogleApiErrorFields; // Assuming googleError has a predictable structure
       console.error(`[WORKER /api/sheet-data] Google API Error for range '${effectiveRange}': ${googleError.code} ${googleError.message}`, googleError.details);
       errorDetails = `${googleError.message} (Code: ${googleError.code})`;
       if (googleError.code === 403) {
@@ -193,7 +203,7 @@ app.get('/api/sheet-data/:sheetName', async (c) => {
     } else {
       console.error(`[WORKER /api/sheet-data] Error fetching from Google Sheets API for range '${effectiveRange}': ${errorDetails}`, e);
     }
-    return c.json({ error: errorMessage, details: errorDetails }, statusCode as any); // Cast to any for status code to bypass Hono's specific types for now
+    return c.json({ error: errorMessage, details: errorDetails }, statusCode as ContentfulStatusCode); // Cast to any for status code to bypass Hono's specific types for now
   }
 });
 
@@ -204,7 +214,7 @@ app.get('/api/sheet-data/:sheetName', async (c) => {
 // In production, Cloudflare Pages or a similar service will serve static assets.
 // The ASSETS binding is used here for that purpose.
 // During development with Vite, Vite's dev server handles static assets.
-if (import.meta.env.PROD) {
+if (process.env.NODE_ENV === 'production') {
   app.get('*', (c) => {
     if (c.env && c.env.ASSETS) {
       return c.env.ASSETS.fetch(c.req.raw);

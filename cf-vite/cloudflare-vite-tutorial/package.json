@@ -11,10 +11,10 @@
   },
   "dependencies": {
     "@discord/embedded-app-sdk": "^1.4.2",
-    "googleapis": "^149.0.0",
-    "hono": "^4.5.8",
     "eslint-plugin-react-dom": "^1.50.0",
     "eslint-plugin-react-x": "^1.50.0",
+    "googleapis": "^149.0.0",
+    "hono": "^4.5.8",
     "react": "^19.1.0",
     "react-dom": "^19.1.0"
   },

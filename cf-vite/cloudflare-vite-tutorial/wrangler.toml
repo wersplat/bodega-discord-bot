@@ -17,3 +17,7 @@ DISCORD_CLIENT_ID = "your_discord_client_id_placeholder"
 DISCORD_CLIENT_SECRET = "your_discord_client_secret_placeholder"
 GOOGLE_SHEET_ID = "your_google_sheet_id_placeholder"
 GOOGLE_API_KEY = "your_google_api_key_placeholder"
+
+# wrangler.toml (wrangler v3.88.0^)
+observability.logs
+enabled = true

@@ -127,7 +127,6 @@ return (
     </section>
   </main>
 );
-}
 
 function App() {
     const [auth, setAuth] = useState<User | null>(null);

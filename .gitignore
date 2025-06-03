@@ -7,3 +7,8 @@ dist/
 # Env
 .env
 activity-server/bot-service-creds..json
+
+activity
+cf-activity
+activity/**
+cf-activity/**

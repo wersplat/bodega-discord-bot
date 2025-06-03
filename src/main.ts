@@ -74,26 +74,43 @@ client.once('ready', async () => {
   startScheduler(client);
 });
 
-// Interaction (slash command) handler
+// Interaction handler
 client.on('interactionCreate', async (interaction: Interaction) => {
-  if (!interaction.isCommand()) return;
-
-  const command = client.commands.get(interaction.commandName);
-  if (!command) return;
-
   try {
-    await command.execute(interaction);
-  } catch (error) {
-    console.error(`Error executing command ${interaction.commandName}:`, error);
-    
-    try {
-      await interaction.reply({
-        content: 'There was an error executing this command!',
-        ephemeral: true,
-      });
-    } catch (e) {
-      console.error('Failed to send error reply:', e);
+    // Handle slash commands
+    if (interaction.isChatInputCommand()) {
+      const command = client.commands.get(interaction.commandName);
+      
+      if (!command) {
+        console.error(`No command matching ${interaction.commandName} was found.`);
+        return;
+      }
+
+      try {
+        console.log(`Executing command: ${interaction.commandName}`);
+        await command.execute(interaction);
+      } catch (error) {
+        console.error(`Error executing ${interaction.commandName}:`, error);
+        
+        if (interaction.replied || interaction.deferred) {
+          await interaction.followUp({
+            content: 'There was an error executing this command!',
+            ephemeral: true,
+          });
+        } else {
+          await interaction.reply({
+            content: 'There was an error executing this command!',
+            ephemeral: true,
+          });
+        }
+      }
     }
+    // Handle other interaction types if needed
+    // else if (interaction.isAutocomplete()) { ... }
+    // else if (interaction.isButton()) { ... }
+    // else if (interaction.isSelectMenu()) { ... }
+  } catch (error) {
+    console.error('Error in interaction handler:', error);
   }
 });
 

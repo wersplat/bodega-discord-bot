@@ -8,6 +8,9 @@ dist/
 .env
 activity-server/bot-service-creds..json
 
+# Data storage
+data/
+
 activity
 cf-activity
 activity/**

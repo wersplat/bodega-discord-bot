@@ -54,8 +54,15 @@ const commandFiles = readdirSync(commandsPath).filter(file => file.endsWith('.ts
 
 for (const file of commandFiles) {
   const filePath = path.join(commandsPath, file);
-  const command = require(filePath);
-  client.commands.set(command.data.name, command);
+  const commandModule = require(filePath);
+  
+  // Handle both default and named exports like registerCommands does
+  const command = commandModule.default || commandModule;
+  if (command && command.data) {
+    client.commands.set(command.data.name, command);
+  } else {
+    console.warn(`[WARNING] The command at ${filePath} is missing a usable "data" export.`);
+  }
 }
 
 // Bot ready event

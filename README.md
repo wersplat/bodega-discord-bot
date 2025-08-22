@@ -24,6 +24,10 @@ This single codebase powers all Discord bot features—roster lookups, announcem
 - Buttons, dropdowns & modals for rich interactions
 - Scheduled MVP & leaderboard announcements
 - **Activity App**: Displays live Google Sheets standings in Discord (see below)
+- **Roster Management** (admin only):
+  - `/set-roster-channel <#channel>` — configure roster posting channel
+  - `/post-roster <team>` — post single team roster embed
+  - `/post-all-rosters` — post all active teams' rosters
 
 ---
 
@@ -53,7 +57,7 @@ The Activity App is fully integrated into the main bot's Express server, elimina
 
    ```bash
    cp .env.example .env
-   # Edit .env with your values: DISCORD_TOKEN, DISCORD_CLIENT_ID, DISCORD_CLIENT_SECRET, GUILD_ID, API_URL, GOOGLE_SHEET_ID, GOOGLE_CREDS_JSON, etc.
+   # Edit .env with your values: DISCORD_TOKEN, DISCORD_CLIENT_ID, DISCORD_CLIENT_SECRET, GUILD_ID, API_URL, GOOGLE_SHEET_ID, GOOGLE_CREDS_JSON, SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY, etc.
    ```
 
 3. **Local development**  
@@ -62,12 +66,40 @@ The Activity App is fully integrated into the main bot's Express server, elimina
    npm run dev
    ```
 
-4. **Build & run**  
+4. **Register commands**  
+
+   ```bash
+   npm run register
+   ```
+
+5. **Build & run**  
 
    ```bash
    npm run build
    npm run start
    ```
+
+## 🗂️ Roster Management Setup
+
+The bot includes powerful roster management features that integrate with Supabase:
+
+1. **Environment Setup**: Add these variables to your `.env`:
+   - `SUPABASE_URL` — Your Supabase project URL
+   - `SUPABASE_SERVICE_ROLE_KEY` — Service role key for server-side access
+   - `ROSTER_CHANNEL_ID` — Optional global fallback roster channel
+
+2. **Usage**:
+   - `/set-roster-channel #rosters` — Configure where rosters are posted
+   - `/post-roster bodega-cats` — Post roster by team slug
+   - `/post-roster 00000000-0000-0000-0000-000000000000` — Post roster by UUID
+   - `/post-all-rosters` — Post all active teams (with rate limiting)
+
+3. **Features**:
+   - Automatic embed pagination for teams with >25 players
+   - Captain highlighting with ⭐ emoji
+   - Jersey number and position display
+   - Team logo thumbnails and league/season info
+   - Permission validation before posting
 
 ## 📁 Folder Structure
 

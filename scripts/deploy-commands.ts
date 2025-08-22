@@ -5,7 +5,7 @@ import { readdirSync } from 'fs';
 import { join } from 'path';
 
 const commands = [];
-const commandsPath = join(__dirname, '../commands');
+const commandsPath = join(__dirname, '../src/commands');
 const commandFiles = readdirSync(commandsPath).filter(f => f.endsWith('.ts'));
 
 for (const file of commandFiles) {
